@@ -1,0 +1,12 @@
+# Raw model runs can contain prompts and responses; they live in a private store, never in Git.
+.model-evidence/
+
+# Isolated agent worktrees.
+.worktrees/
+
+# Generated site output.
+dist/
+
+# Python bytecode.
+__pycache__/
+*.py[cod]
