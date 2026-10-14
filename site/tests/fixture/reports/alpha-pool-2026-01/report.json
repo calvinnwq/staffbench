@@ -1,0 +1,27 @@
+{
+ "slug": "alpha-pool-2026-01",
+ "number": 1,
+ "title": "Alpha fixture pool",
+ "label": "Fixture harness × Alpha pool",
+ "published": "1 Jan 2026",
+ "run_dates": "1 Jan 2026",
+ "pool": "Every invented model in the fixture pool",
+ "harness": "A fixture harness with nothing switched on",
+ "reasoning": "low",
+ "models": {
+  "acme/quill-1": "Quill 1",
+  "acme/quill-1-mini": "Quill 1 Mini",
+  "orbit/lark-2": "Lark 2",
+  "orbit/lark-2-fast": "Lark 2 Fast",
+  "nimbus/wren-0": "Wren 0"
+ },
+ "catches": {
+  "Lark 2 Fast": "fixture catch"
+ },
+ "notes": [
+  [
+   "Lark 2 Fast",
+   "is an invented model with an invented catch."
+  ]
+ ]
+}

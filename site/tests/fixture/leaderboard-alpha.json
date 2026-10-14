@@ -1,0 +1,408 @@
+{
+ "schema_version": "leaderboard-v2",
+ "benchmark_id": "staffbench",
+ "benchmark_version": "0.0.0-fixture",
+ "policy_id": "leaderboard-v2",
+ "policy_version": "2.0.0",
+ "release_lock_fingerprint": "sha256:fixture",
+ "aggregate": {
+  "attempted_runs": 75,
+  "comparable_strict_json_valid_runs": 70,
+  "comparable_format_recovered_runs": 2,
+  "comparable_unrecoverable_output_runs": 1,
+  "comparable_resolved_runs": 71,
+  "comparable_full_contract_pass_runs": 29,
+  "human_scores_assigned": false
+ },
+ "overall": {
+  "ranked": [
+   {
+    "model_id": "acme/quill-1",
+    "rank": 1,
+    "status": "confirmed",
+    "metrics": {
+     "automatic_check_pass_rate": 0.966667,
+     "full_contract_pass_rate": 0.666667,
+     "hard_failure_rate": 0.1666665,
+     "human_quality_score": null,
+     "human_score_coverage": 0.0,
+     "invalid_output_rate": 0.0,
+     "median_latency_ms": 21000,
+     "strict_json_valid_rate": 1.0
+    }
+   },
+   {
+    "model_id": "orbit/lark-2",
+    "rank": 2,
+    "status": "confirmed",
+    "metrics": {
+     "automatic_check_pass_rate": 0.855556,
+     "full_contract_pass_rate": 0.555556,
+     "hard_failure_rate": 0.222222,
+     "human_quality_score": null,
+     "human_score_coverage": 0.0,
+     "invalid_output_rate": 0.0,
+     "median_latency_ms": 9000,
+     "strict_json_valid_rate": 1.0
+    }
+   },
+   {
+    "model_id": "acme/quill-1-mini",
+    "rank": 3,
+    "status": "provisional",
+    "metrics": {
+     "automatic_check_pass_rate": 0.633333,
+     "full_contract_pass_rate": 0.333333,
+     "hard_failure_rate": 0.3333335,
+     "human_quality_score": null,
+     "human_score_coverage": 0.0,
+     "invalid_output_rate": 0.0,
+     "median_latency_ms": 12500,
+     "strict_json_valid_rate": 1.0
+    }
+   },
+   {
+    "model_id": "orbit/lark-2-fast",
+    "rank": 4,
+    "status": "confirmed",
+    "metrics": {
+     "automatic_check_pass_rate": 0.411111,
+     "full_contract_pass_rate": 0.111111,
+     "hard_failure_rate": 0.4444445,
+     "human_quality_score": null,
+     "human_score_coverage": 0.0,
+     "invalid_output_rate": 0.0,
+     "median_latency_ms": 4200,
+     "strict_json_valid_rate": 1.0
+    }
+   }
+  ],
+  "excluded": [
+   {
+    "model_id": "nimbus/wren-0",
+    "status": "excluded"
+   }
+  ],
+  "unranked": []
+ },
+ "models": [
+  {
+   "model_id": "acme/quill-1",
+   "availability": "eligible",
+   "status": "confirmed",
+   "exclusion_reason": null,
+   "reason_codes": [],
+   "provider": "fixture",
+   "metrics": {
+    "automatic_check_pass_rate": 0.966667,
+    "full_contract_pass_rate": 0.666667,
+    "hard_failure_rate": 0.1666665,
+    "human_quality_score": null,
+    "human_score_coverage": 0.0,
+    "invalid_output_rate": 0.0,
+    "median_latency_ms": 21000,
+    "strict_json_valid_rate": 1.0
+   },
+   "coverage": {
+    "maximum_replicates": 3,
+    "minimum_replicates": 3,
+    "roles_covered": 3,
+    "roles_total": 3
+   },
+   "usage": {
+    "mean_output_tokens": 1020.0
+   },
+   "task_cells": [
+    {
+     "task_id": "COS-01",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 3,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "COS-02",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-01",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 3,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-02",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 2,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-01",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 3,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-02",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    }
+   ]
+  },
+  {
+   "model_id": "acme/quill-1-mini",
+   "availability": "eligible",
+   "status": "provisional",
+   "exclusion_reason": null,
+   "reason_codes": [],
+   "provider": "fixture",
+   "metrics": {
+    "automatic_check_pass_rate": 0.633333,
+    "full_contract_pass_rate": 0.333333,
+    "hard_failure_rate": 0.3333335,
+    "human_quality_score": null,
+    "human_score_coverage": 0.0,
+    "invalid_output_rate": 0.0,
+    "median_latency_ms": 12500,
+    "strict_json_valid_rate": 1.0
+   },
+   "coverage": {
+    "maximum_replicates": 3,
+    "minimum_replicates": 2,
+    "roles_covered": 3,
+    "roles_total": 3
+   },
+   "usage": {
+    "mean_output_tokens": 1070.0
+   },
+   "task_cells": [
+    {
+     "task_id": "COS-01",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "COS-02",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-01",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 2,
+     "comparable_runs": 2
+    },
+    {
+     "task_id": "FIN-02",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-01",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-02",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    }
+   ]
+  },
+  {
+   "model_id": "nimbus/wren-0",
+   "availability": "excluded",
+   "status": "excluded",
+   "exclusion_reason": "Fixture model that never answered its test call",
+   "reason_codes": [
+    "roster-excluded"
+   ],
+   "provider": "fixture",
+   "metrics": {
+    "full_contract_pass_rate": null,
+    "median_latency_ms": null
+   },
+   "coverage": {
+    "maximum_replicates": 0
+   },
+   "usage": {
+    "mean_output_tokens": null
+   },
+   "task_cells": [
+    {
+     "task_id": "COS-01",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 0
+    },
+    {
+     "task_id": "COS-02",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 0
+    },
+    {
+     "task_id": "FIN-01",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 0
+    },
+    {
+     "task_id": "FIN-02",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 0
+    },
+    {
+     "task_id": "ENG-01",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 0
+    },
+    {
+     "task_id": "ENG-02",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 0
+    }
+   ]
+  },
+  {
+   "model_id": "orbit/lark-2",
+   "availability": "eligible",
+   "status": "confirmed",
+   "exclusion_reason": null,
+   "reason_codes": [],
+   "provider": "fixture",
+   "metrics": {
+    "automatic_check_pass_rate": 0.855556,
+    "full_contract_pass_rate": 0.555556,
+    "hard_failure_rate": 0.222222,
+    "human_quality_score": null,
+    "human_score_coverage": 0.0,
+    "invalid_output_rate": 0.0,
+    "median_latency_ms": 9000,
+    "strict_json_valid_rate": 1.0
+   },
+   "coverage": {
+    "maximum_replicates": 3,
+    "minimum_replicates": 3,
+    "roles_covered": 3,
+    "roles_total": 3
+   },
+   "usage": {
+    "mean_output_tokens": 1020.0
+   },
+   "task_cells": [
+    {
+     "task_id": "COS-01",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 2,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "COS-02",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-01",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 3,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-02",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-01",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 2,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-02",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 2,
+     "comparable_runs": 3
+    }
+   ]
+  },
+  {
+   "model_id": "orbit/lark-2-fast",
+   "availability": "eligible",
+   "status": "confirmed",
+   "exclusion_reason": null,
+   "reason_codes": [],
+   "provider": "fixture",
+   "metrics": {
+    "automatic_check_pass_rate": 0.411111,
+    "full_contract_pass_rate": 0.111111,
+    "hard_failure_rate": 0.4444445,
+    "human_quality_score": null,
+    "human_score_coverage": 0.0,
+    "invalid_output_rate": 0.0,
+    "median_latency_ms": 4200,
+    "strict_json_valid_rate": 1.0
+   },
+   "coverage": {
+    "maximum_replicates": 3,
+    "minimum_replicates": 3,
+    "roles_covered": 3,
+    "roles_total": 3
+   },
+   "usage": {
+    "mean_output_tokens": 1070.0
+   },
+   "task_cells": [
+    {
+     "task_id": "COS-01",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "COS-02",
+     "role_id": "cos",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-01",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "FIN-02",
+     "role_id": "fin",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-01",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 1,
+     "comparable_runs": 3
+    },
+    {
+     "task_id": "ENG-02",
+     "role_id": "eng",
+     "comparable_full_contract_pass_runs": 0,
+     "comparable_runs": 3
+    }
+   ]
+  }
+ ]
+}

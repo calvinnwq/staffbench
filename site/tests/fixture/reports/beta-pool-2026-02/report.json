@@ -1,0 +1,20 @@
+{
+ "slug": "beta-pool-2026-02",
+ "number": 2,
+ "title": "Beta fixture pool",
+ "label": "Fixture harness × Beta pool",
+ "published": "pending",
+ "run_dates": "pending",
+ "pool": "Every invented model in the fixture pool",
+ "harness": "A fixture harness with nothing switched on",
+ "reasoning": "low",
+ "models": {
+  "acme/quill-1": "Quill 1",
+  "acme/quill-1-mini": "Quill 1 Mini",
+  "orbit/lark-2": "Lark 2",
+  "orbit/lark-2-fast": "Lark 2 Fast",
+  "nimbus/wren-0": "Wren 0"
+ },
+ "catches": {},
+ "notes": []
+}

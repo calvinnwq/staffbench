@@ -1,0 +1,378 @@
+{
+ "benchmark_id": "staffbench",
+ "benchmark_version": "0.0.0-fixture",
+ "evaluation_policy": {
+  "execution_boundary": "offline_replay",
+  "live_web": false
+ },
+ "roles": [
+  {
+   "id": "cos",
+   "code": "COS",
+   "name": "Chief of Staff",
+   "tag": "Chief of Staff",
+   "mission": "Fixture mission: keeps a made-up plan in order.",
+   "task_ids": [
+    "COS-01",
+    "COS-02"
+   ],
+   "primary_dimensions": [
+    "requirement fidelity",
+    "handoff usefulness"
+   ]
+  },
+  {
+   "id": "fin",
+   "code": "FIN",
+   "name": "Personal CFO",
+   "tag": "CFO",
+   "mission": "Fixture mission: models invented money decisions.",
+   "task_ids": [
+    "FIN-01",
+    "FIN-02"
+   ],
+   "primary_dimensions": [
+    "numerical accuracy"
+   ]
+  },
+  {
+   "id": "eng",
+   "code": "ENG",
+   "name": "Principal Engineer",
+   "tag": "Engineer",
+   "mission": "Fixture mission: reviews a toy repository.",
+   "task_ids": [
+    "ENG-01",
+    "ENG-02"
+   ],
+   "primary_dimensions": [
+    "correctness",
+    "scope control"
+   ]
+  }
+ ],
+ "tasks": [
+  {
+   "id": "COS-01",
+   "sequence": 1,
+   "role_id": "cos",
+   "title": "Sort a fixture request into a plan",
+   "task_family": "fixture",
+   "provenance": "synthetic",
+   "privacy_class": "public_synthetic",
+   "status": "benchmark-ready",
+   "prompt_contract": {
+    "status": "frozen",
+    "input_description": "An invented request packet.",
+    "required_output_format": "json",
+    "required_output_fields": [
+     "goal",
+     "tasks"
+    ],
+    "output_constraints": [
+     "Use only facts in the packet.",
+     "Do not claim an external action."
+    ]
+   },
+   "measurement": {
+    "primary_type": "hybrid",
+    "automatic_checks": [
+     {
+      "id": "fields",
+      "type": "required_field",
+      "description": "Every required field is present.",
+      "pass_condition": "All fields parse."
+     }
+    ],
+    "human_dimensions": [
+     {
+      "id": "clarity",
+      "label": "Clarity",
+      "weight": 1.0,
+      "anchors": {
+       "0": "Unclear.",
+       "4": "Clear."
+      }
+     }
+    ],
+    "hard_failures": [
+     {
+      "id": "invented-fact",
+      "condition": "The answer invents a fact that is not in the packet."
+     }
+    ]
+   },
+   "known_failure_modes": [
+    "Dropping a constraint"
+   ]
+  },
+  {
+   "id": "COS-02",
+   "sequence": 2,
+   "role_id": "cos",
+   "title": "Merge two fixture status notes",
+   "task_family": "fixture",
+   "provenance": "synthetic",
+   "privacy_class": "public_synthetic",
+   "status": "benchmark-ready",
+   "prompt_contract": {
+    "status": "frozen",
+    "input_description": "Two invented status notes.",
+    "required_output_format": "json",
+    "required_output_fields": [
+     "summary",
+     "conflicts"
+    ],
+    "output_constraints": [
+     "Use only facts in the packet.",
+     "Do not claim an external action."
+    ]
+   },
+   "measurement": {
+    "primary_type": "hybrid",
+    "automatic_checks": [
+     {
+      "id": "fields",
+      "type": "required_field",
+      "description": "Every required field is present.",
+      "pass_condition": "All fields parse."
+     }
+    ],
+    "human_dimensions": [
+     {
+      "id": "clarity",
+      "label": "Clarity",
+      "weight": 1.0,
+      "anchors": {
+       "0": "Unclear.",
+       "4": "Clear."
+      }
+     }
+    ],
+    "hard_failures": [
+     {
+      "id": "invented-fact",
+      "condition": "The answer invents a fact that is not in the packet."
+     }
+    ]
+   },
+   "known_failure_modes": [
+    "Merging conflicting claims"
+   ]
+  },
+  {
+   "id": "FIN-01",
+   "sequence": 1,
+   "role_id": "fin",
+   "title": "Check a toy budget against a limit",
+   "task_family": "fixture",
+   "provenance": "synthetic",
+   "privacy_class": "public_synthetic",
+   "status": "benchmark-ready",
+   "prompt_contract": {
+    "status": "frozen",
+    "input_description": "A made-up budget table.",
+    "required_output_format": "json",
+    "required_output_fields": [
+     "totals",
+     "gaps"
+    ],
+    "output_constraints": [
+     "Use only facts in the packet.",
+     "Do not claim an external action."
+    ]
+   },
+   "measurement": {
+    "primary_type": "hybrid",
+    "automatic_checks": [
+     {
+      "id": "fields",
+      "type": "required_field",
+      "description": "Every required field is present.",
+      "pass_condition": "All fields parse."
+     }
+    ],
+    "human_dimensions": [
+     {
+      "id": "clarity",
+      "label": "Clarity",
+      "weight": 1.0,
+      "anchors": {
+       "0": "Unclear.",
+       "4": "Clear."
+      }
+     }
+    ],
+    "hard_failures": [
+     {
+      "id": "invented-fact",
+      "condition": "The answer invents a fact that is not in the packet."
+     }
+    ]
+   },
+   "known_failure_modes": [
+    "Totals that do not add up"
+   ]
+  },
+  {
+   "id": "FIN-02",
+   "sequence": 2,
+   "role_id": "fin",
+   "title": "Compare two toy savings plans",
+   "task_family": "fixture",
+   "provenance": "synthetic",
+   "privacy_class": "public_synthetic",
+   "status": "benchmark-ready",
+   "prompt_contract": {
+    "status": "frozen",
+    "input_description": "Two made-up savings plans.",
+    "required_output_format": "json",
+    "required_output_fields": [
+     "comparison"
+    ],
+    "output_constraints": [
+     "Use only facts in the packet.",
+     "Do not claim an external action."
+    ]
+   },
+   "measurement": {
+    "primary_type": "hybrid",
+    "automatic_checks": [
+     {
+      "id": "fields",
+      "type": "required_field",
+      "description": "Every required field is present.",
+      "pass_condition": "All fields parse."
+     }
+    ],
+    "human_dimensions": [
+     {
+      "id": "clarity",
+      "label": "Clarity",
+      "weight": 1.0,
+      "anchors": {
+       "0": "Unclear.",
+       "4": "Clear."
+      }
+     }
+    ],
+    "hard_failures": [
+     {
+      "id": "invented-fact",
+      "condition": "The answer invents a fact that is not in the packet."
+     }
+    ]
+   },
+   "known_failure_modes": [
+    "Ignoring fees"
+   ]
+  },
+  {
+   "id": "ENG-01",
+   "sequence": 1,
+   "role_id": "eng",
+   "title": "Fix a toy parser bug",
+   "task_family": "fixture",
+   "provenance": "synthetic",
+   "privacy_class": "public_synthetic",
+   "status": "benchmark-ready",
+   "prompt_contract": {
+    "status": "frozen",
+    "input_description": "A tiny invented repository.",
+    "required_output_format": "json",
+    "required_output_fields": [
+     "patch",
+     "tests"
+    ],
+    "output_constraints": [
+     "Use only facts in the packet.",
+     "Do not claim an external action."
+    ]
+   },
+   "measurement": {
+    "primary_type": "hybrid",
+    "automatic_checks": [
+     {
+      "id": "fields",
+      "type": "required_field",
+      "description": "Every required field is present.",
+      "pass_condition": "All fields parse."
+     }
+    ],
+    "human_dimensions": [
+     {
+      "id": "clarity",
+      "label": "Clarity",
+      "weight": 1.0,
+      "anchors": {
+       "0": "Unclear.",
+       "4": "Clear."
+      }
+     }
+    ],
+    "hard_failures": [
+     {
+      "id": "invented-fact",
+      "condition": "The answer invents a fact that is not in the packet."
+     }
+    ]
+   },
+   "known_failure_modes": [
+    "Changing unrelated files"
+   ]
+  },
+  {
+   "id": "ENG-02",
+   "sequence": 2,
+   "role_id": "eng",
+   "title": "Review a toy config file",
+   "task_family": "fixture",
+   "provenance": "synthetic",
+   "privacy_class": "public_synthetic",
+   "status": "benchmark-ready",
+   "prompt_contract": {
+    "status": "frozen",
+    "input_description": "An invented config file.",
+    "required_output_format": "json",
+    "required_output_fields": [
+     "findings"
+    ],
+    "output_constraints": [
+     "Use only facts in the packet.",
+     "Do not claim an external action."
+    ]
+   },
+   "measurement": {
+    "primary_type": "hybrid",
+    "automatic_checks": [
+     {
+      "id": "fields",
+      "type": "required_field",
+      "description": "Every required field is present.",
+      "pass_condition": "All fields parse."
+     }
+    ],
+    "human_dimensions": [
+     {
+      "id": "clarity",
+      "label": "Clarity",
+      "weight": 1.0,
+      "anchors": {
+       "0": "Unclear.",
+       "4": "Clear."
+      }
+     }
+    ],
+    "hard_failures": [
+     {
+      "id": "invented-fact",
+      "condition": "The answer invents a fact that is not in the packet."
+     }
+    ]
+   },
+   "known_failure_modes": [
+    "Flagging safe entries"
+   ]
+  }
+ ]
+}

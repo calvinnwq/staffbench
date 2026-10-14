@@ -1,0 +1,71 @@
+name: site
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test and build the fixture site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Site tests
+        run: python3 -S -m unittest discover -s site/tests -v
+      - name: Build the fixture site twice and compare bytes
+        run: |
+          for out in dist-a dist-b; do
+            python3 -S site/build.py --out "$out" \
+              --ledger site/tests/fixture/task-ledger.json \
+              --reports-dir site/tests/fixture/reports \
+              --results-override alpha-pool-2026-01=site/tests/fixture/leaderboard-alpha.json
+          done
+          diff -r dist-a dist-b
+          (cd dist-a && find . -type f | sort | xargs sha256sum)
+
+  deploy:
+    name: Deploy to GitHub Pages
+    # Manual only, and only once the repository is public: while it is private this job is skipped.
+    if: github.event_name == 'workflow_dispatch' && github.event.repository.private == false
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - id: pages
+        uses: actions/configure-pages@v6
+      - name: Build the site
+        env:
+          BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: python3 -S site/build.py --out dist --base-url "$BASE_URL"
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+      - id: deploy
+        uses: actions/deploy-pages@v5
