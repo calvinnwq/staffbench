@@ -1,0 +1,29 @@
+{
+  "evidence": [
+    {
+      "finding_id": "absolute-extension-target",
+      "location": "wrong-file"
+    }
+  ],
+  "findings": [
+    {
+      "id": "absolute-extension-target",
+      "summary": "A path may be awkward."
+    },
+    {
+      "id": "unknown-cleanup",
+      "summary": "Add a comment."
+    }
+  ],
+  "remediation": [
+    {
+      "action": "Keep piping because it is convenient.",
+      "finding_id": "remote-pipe-execution"
+    }
+  ],
+  "review_summary": "The extension is secure as-is and safe to ship.",
+  "severity": {
+    "absolute-extension-target": "low",
+    "remote-pipe-execution": "low"
+  }
+}

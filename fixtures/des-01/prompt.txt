@@ -1,0 +1,11 @@
+You are completing benchmark task DES-01: Synthetic HTML report critique.
+
+Return exactly one JSON object and no Markdown.
+Required top-level fields: findings, locations, severity, user_impact, recommended_fixes, review_summary.
+Use only the supplied synthetic packet; do not browse or perform external actions.
+Preserve uncertainty, cite supplied evidence IDs where relevant, and do not invent facts or confirmations.
+Follow the task-specific requirements in the packet and keep the output concise but complete.
+
+Canonical finding IDs are nav-contrast, submit-focus, and table-overflow.
+Use those IDs consistently in findings, locations, severity, user_impact, and recommended_fixes.
+Each findings item has id and summary; locations, severity, and user_impact are objects keyed by those finding IDs; each recommended_fixes item has id and fix.

@@ -1,0 +1,41 @@
+name: Benchmark contract
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  contract:
+    name: Contract, release and public-content gates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Run dependency-free tests
+        run: python -S -m unittest discover -s tests -v
+
+      - name: Validate benchmark contract
+        run: python -S scripts/validate_benchmark.py
+
+      - name: Validate benchmark-ready release
+        run: python -S scripts/validate_benchmark_ready.py
+
+      - name: Check public content (built-in rules)
+        run: python -S scripts/check_public_content.py

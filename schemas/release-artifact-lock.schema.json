@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calvinnwq/staffbench/blob/main/schemas/release-artifact-lock.schema.json",
+  "title": "StaffBench release artifact lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "benchmark_id",
+    "benchmark_version",
+    "lock_version",
+    "shared",
+    "tasks"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "benchmark_id": {
+      "const": "staffbench"
+    },
+    "benchmark_version": {
+      "const": "0.5.0"
+    },
+    "lock_version": {
+      "const": "1"
+    },
+    "shared": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledger",
+        "release_lock_schema",
+        "contract_schema",
+        "evaluator_task",
+        "run_record_schema",
+        "replay_task",
+        "model_runner",
+        "hermes_adapter",
+        "release_validator",
+        "leaderboard_builder",
+        "leaderboard_output_schema",
+        "validity_gate",
+        "validity_probe_schema",
+        "validity_probes",
+        "release_lock",
+        "benchmark_validator",
+        "matrix_runner",
+        "leaderboard_input_schema",
+        "model_roster_schema",
+        "leaderboard_policy_schema",
+        "leaderboard_policy",
+        "aggregate_validator",
+        "diagnostic_runner",
+        "diagnostic_manifest_schema",
+        "tolerant_parser",
+        "paced_matrix_runner",
+        "results_publisher",
+        "public_content_check"
+      ],
+      "properties": {
+        "ledger": {
+          "$ref": "#/$defs/artifact"
+        },
+        "release_lock_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "contract_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "evaluator_task": {
+          "$ref": "#/$defs/artifact"
+        },
+        "run_record_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "replay_task": {
+          "$ref": "#/$defs/artifact"
+        },
+        "model_runner": {
+          "$ref": "#/$defs/artifact"
+        },
+        "hermes_adapter": {
+          "$ref": "#/$defs/artifact"
+        },
+        "release_validator": {
+          "$ref": "#/$defs/artifact"
+        },
+        "leaderboard_builder": {
+          "$ref": "#/$defs/artifact"
+        },
+        "leaderboard_output_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "validity_gate": {
+          "$ref": "#/$defs/artifact"
+        },
+        "validity_probe_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "validity_probes": {
+          "$ref": "#/$defs/artifact"
+        },
+        "release_lock": {
+          "$ref": "#/$defs/artifact"
+        },
+        "benchmark_validator": {
+          "$ref": "#/$defs/artifact"
+        },
+        "matrix_runner": {
+          "$ref": "#/$defs/artifact"
+        },
+        "leaderboard_input_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "model_roster_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "leaderboard_policy_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "leaderboard_policy": {
+          "$ref": "#/$defs/artifact"
+        },
+        "aggregate_validator": {
+          "$ref": "#/$defs/artifact"
+        },
+        "diagnostic_runner": {
+          "$ref": "#/$defs/artifact"
+        },
+        "diagnostic_manifest_schema": {
+          "$ref": "#/$defs/artifact"
+        },
+        "tolerant_parser": {
+          "$ref": "#/$defs/artifact"
+        },
+        "paced_matrix_runner": {
+          "$ref": "#/$defs/artifact"
+        },
+        "results_publisher": {
+          "$ref": "#/$defs/artifact"
+        },
+        "public_content_check": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "tasks": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/task"
+      },
+      "minProperties": 1
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture_id",
+        "fixture_version",
+        "artifacts"
+      ],
+      "properties": {
+        "fixture_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fixture_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifacts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "fixture",
+            "prompt",
+            "oracle",
+            "output_schema",
+            "evaluator",
+            "run_record_schema",
+            "known_good",
+            "known_bad",
+            "release_gate"
+          ],
+          "properties": {
+            "manifest": {
+              "$ref": "#/$defs/artifact"
+            },
+            "fixture": {
+              "$ref": "#/$defs/artifact"
+            },
+            "prompt": {
+              "$ref": "#/$defs/artifact"
+            },
+            "oracle": {
+              "$ref": "#/$defs/artifact"
+            },
+            "output_schema": {
+              "$ref": "#/$defs/artifact"
+            },
+            "evaluator": {
+              "$ref": "#/$defs/artifact"
+            },
+            "run_record_schema": {
+              "$ref": "#/$defs/artifact"
+            },
+            "known_good": {
+              "$ref": "#/$defs/artifact"
+            },
+            "known_bad": {
+              "$ref": "#/$defs/artifact"
+            },
+            "release_gate": {
+              "$ref": "#/$defs/artifact"
+            }
+          }
+        }
+      }
+    }
+  }
+}

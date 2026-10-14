@@ -1,0 +1,77 @@
+{
+  "$id": "https://github.com/calvinnwq/staffbench/blob/main/schemas/des-02-output.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "accessibility_requirements": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "control_inventory": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "open_questions": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "read_only_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutations",
+        "note"
+      ],
+      "properties": {
+        "mutations": {
+          "const": "none",
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "state_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "view"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "loading",
+              "ready",
+              "empty",
+              "stale",
+              "error"
+            ]
+          },
+          "view": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "transition_rules": {
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "control_inventory",
+    "state_matrix",
+    "transition_rules",
+    "accessibility_requirements",
+    "read_only_boundary",
+    "open_questions"
+  ],
+  "title": "DES-02 candidate output",
+  "type": "object"
+}

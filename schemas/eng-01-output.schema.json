@@ -1,0 +1,55 @@
+{
+  "$id": "https://github.com/calvinnwq/staffbench/blob/main/schemas/eng-01-output.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "changed_files": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "implementation": {
+      "type": "object"
+    },
+    "residual_risks": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "verification_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "focused_tests",
+        "notes"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "blocked"
+          ]
+        },
+        "focused_tests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "implementation",
+    "changed_files",
+    "verification_summary",
+    "residual_risks"
+  ],
+  "title": "ENG-01 candidate output",
+  "type": "object"
+}

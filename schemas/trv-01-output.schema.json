@@ -1,0 +1,62 @@
+{
+  "$id": "https://github.com/calvinnwq/staffbench/blob/main/schemas/trv-01-output.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "contingency": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "cost_total": {
+      "type": "integer"
+    },
+    "fuel_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel_type",
+        "canister_count"
+      ],
+      "properties": {
+        "fuel_type": {
+          "type": "string"
+        },
+        "canister_count": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "selected_item_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "stove-a",
+          "pot-a",
+          "windscreen-a",
+          "stove-b",
+          "mug-a"
+        ]
+      }
+    },
+    "tradeoffs": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "weight_total": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "selected_item_ids",
+    "weight_total",
+    "cost_total",
+    "fuel_plan",
+    "contingency",
+    "tradeoffs"
+  ],
+  "title": "TRV-01 candidate output",
+  "type": "object"
+}

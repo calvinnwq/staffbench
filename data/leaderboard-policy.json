@@ -1,0 +1,39 @@
+{
+  "$schema": "../schemas/leaderboard-policy.schema.json",
+  "schema_version": "leaderboard-policy-v2",
+  "policy_id": "leaderboard-v2",
+  "policy_version": "2.0.0",
+  "benchmark_id": "staffbench",
+  "benchmark_version": "0.5.0",
+  "scope": "benchmark-specific model leaderboard and routing aid",
+  "status": "active",
+  "coverage": {
+    "provisional_min_task_coverage": 1.0,
+    "confirmed_min_replicates_per_task": 3
+  },
+  "ranking": {
+    "primary": "full_contract_pass_rate",
+    "tie_breakers": [
+      "automatic_check_pass_rate",
+      "human_quality_score",
+      "hard_failure_rate",
+      "invalid_output_rate",
+      "median_latency_ms"
+    ]
+  },
+  "output_scoring": {
+    "parser_version": "tolerant-json-v1",
+    "recovered_classifications": [
+      "markdown-fenced-json",
+      "surrounded-json"
+    ],
+    "recovered_output": "evaluate-with-frozen-evaluator",
+    "unrecoverable_completed_output": "count-as-fail",
+    "unrecoverable_failed_execution_output": "exclude-as-infrastructure",
+    "format_compliance_metric": "strict_json_valid_rate"
+  },
+  "publication": {
+    "score_publishable_requires_complete_overall_coverage": true,
+    "routing_requires_confirmed_model_per_role": true
+  }
+}

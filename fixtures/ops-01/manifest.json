@@ -1,0 +1,52 @@
+{
+  "allowed_tools": [],
+  "benchmark_ready": true,
+  "benchmark_version": "0.5.0",
+  "controls": [
+    {
+      "condition": "known-good-control",
+      "expected_status": "passed",
+      "path": "controls/known-good.json",
+      "sha256": "sha256:0a513b060bfd59bf13fc66fe4339bf47c1e411d1fcbdc466f1d49269d31b45bc"
+    },
+    {
+      "condition": "known-bad-control",
+      "expected_status": "failed",
+      "path": "controls/known-bad.json",
+      "sha256": "sha256:f688f85a39629017325b9884e89eed8d0403bb499dd88328e45a747ab7b0fff2"
+    }
+  ],
+  "evaluator": {
+    "path": "../../scripts/evaluate_task.py",
+    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
+    "version": "task-oracle-v3"
+  },
+  "fixture": {
+    "id": "ops-collector-incident-v1",
+    "path": "input.json",
+    "sha256": "sha256:b9132f114387e1a72231a778711af9b387e6b9036b49198e2c7077f75e58b184",
+    "status": "frozen",
+    "version": "1.0.0"
+  },
+  "oracle": {
+    "path": "../../oracles/ops-01.json",
+    "sha256": "sha256:63f3249f4d69f6f588fa6d3ede9abda568da8538050fdf683a38a96909485181"
+  },
+  "output_schema": {
+    "path": "../../schemas/ops-01-output.schema.json",
+    "sha256": "sha256:581c5db72a69e2c6983b6b46b9cf90bb403ab9b5d70794ea7d2f9bcead191d1d"
+  },
+  "prompt": {
+    "path": "prompt.txt",
+    "sha256": "sha256:1cddec1aa625e4c038863998d514736d7864673fafcd5f62efadb8aaff649095",
+    "status": "frozen"
+  },
+  "release_gate": "../../scripts/validate_benchmark_ready.py",
+  "role_id": "ops",
+  "run_record_schema": {
+    "path": "../../schemas/task-run-record.schema.json",
+    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+  },
+  "status": "benchmark-ready",
+  "task_id": "OPS-01"
+}

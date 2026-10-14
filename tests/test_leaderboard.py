@@ -1,0 +1,1203 @@
+"""Leaderboard contract and generator tests."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from typing import Any
+
+from scripts.build_leaderboard import (
+    DEFAULT_RUN_SCHEMA,
+    LeaderboardInputError,
+    _load_records,
+    _trusted_task_bindings,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+BUILDER = ROOT / "scripts" / "build_leaderboard.py"
+POLICY = ROOT / "data" / "leaderboard-policy.json"
+POLICY_SCHEMA = ROOT / "schemas" / "leaderboard-policy.schema.json"
+
+
+FINGERPRINT = "sha256:" + "0" * 64
+RAW_FINGERPRINT = "sha256:" + hashlib.sha256(b"{}\n").hexdigest()
+
+
+def _write_json(path: Path, value: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _run_record(model_id: str, task_id: str, passed: bool, sequence: int) -> dict[str, Any]:
+    timestamp = f"2026-01-01T00:00:{sequence:02d}Z"
+    safe_model_id = model_id.replace("/", "-").replace(":", "-")
+    return {
+        "run_id": f"{safe_model_id}-{task_id}-{sequence}",
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "release_lock_fingerprint": FINGERPRINT,
+        "ledger_fingerprint": FINGERPRINT,
+        "task_id": task_id,
+        "role_id": task_id.split("-")[0].lower(),
+        "harness": "hermes-oneshot",
+        "model_requested": model_id,
+        "model_resolved": model_id,
+        "provider_requested": "nous",
+        "provider_resolved": "nous",
+        "resolution_status": "resolved",
+        "condition": "model-calibration",
+        "evaluator_version": "task-oracle-v2",
+        "output_parse_status": "json-object",
+        "task_manifest_fingerprint": FINGERPRINT,
+        "oracle_fingerprint": FINGERPRINT,
+        "output_schema_fingerprint": FINGERPRINT,
+        "evaluator_fingerprint": FINGERPRINT,
+        "run_record_schema_fingerprint": FINGERPRINT,
+        "harness_fingerprint": FINGERPRINT,
+        "prompt_fingerprint": FINGERPRINT,
+        "fixture_fingerprint": FINGERPRINT,
+        "input_fingerprint": FINGERPRINT,
+        "input_composition_version": "prompt-plus-fixture-v1",
+        "started_at": timestamp,
+        "completed_at": timestamp,
+        "status": "passed" if passed else "failed",
+        "execution_status": "completed",
+        "failure_class": "none",
+        "raw_output_reference": f"runs/{safe_model_id}-{task_id}-{sequence}.txt",
+        "raw_output_fingerprint": RAW_FINGERPRINT,
+        "automatic_checks": [
+            {
+                "id": "contract",
+                "status": "pass" if passed else "fail",
+                "evidence": ["synthetic test evidence"],
+            }
+        ],
+        "hard_failures": [],
+        "human_scores": {},
+        "latency_ms": 100 + sequence,
+        "usage": {"model": model_id, "provider": "nous", "completed": True, "failed": False},
+        "notes": "synthetic leaderboard test run",
+    }
+
+
+def _base_ledger() -> dict[str, Any]:
+    return {
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "roles": [
+            {"id": "alpha", "task_ids": ["ALPHA-01", "ALPHA-02"]},
+            {"id": "beta", "task_ids": ["BETA-01", "BETA-02", "BETA-03", "BETA-04"]},
+        ],
+        "tasks": [
+            {"id": task_id, "role_id": role_id}
+            for role_id, task_ids in (
+                ("alpha", ["ALPHA-01", "ALPHA-02"]),
+                ("beta", ["BETA-01", "BETA-02", "BETA-03", "BETA-04"]),
+            )
+            for task_id in task_ids
+        ],
+    }
+
+
+def _base_policy() -> dict[str, Any]:
+    return {
+        "schema_version": "leaderboard-policy-v2",
+        "policy_id": "leaderboard-v2",
+        "policy_version": "2.0.0",
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "scope": "benchmark-specific model leaderboard and routing aid",
+        "status": "active",
+        "coverage": {
+            "provisional_min_task_coverage": 1.0,
+            "confirmed_min_replicates_per_task": 3,
+        },
+        "ranking": {
+            "primary": "full_contract_pass_rate",
+            "tie_breakers": [
+                "automatic_check_pass_rate",
+                "human_quality_score",
+                "hard_failure_rate",
+                "invalid_output_rate",
+                "median_latency_ms",
+            ],
+        },
+        "output_scoring": {
+            "parser_version": "tolerant-json-v1",
+            "recovered_classifications": ["markdown-fenced-json", "surrounded-json"],
+            "recovered_output": "evaluate-with-frozen-evaluator",
+            "unrecoverable_completed_output": "count-as-fail",
+            "unrecoverable_failed_execution_output": "exclude-as-infrastructure",
+            "format_compliance_metric": "strict_json_valid_rate",
+        },
+        "publication": {
+            "score_publishable_requires_complete_overall_coverage": True,
+            "routing_requires_confirmed_model_per_role": True,
+        },
+    }
+
+
+def _base_roster(model_ids: tuple[str, ...] = ("model-a:free", "model-b:free")) -> dict[str, Any]:
+    return {
+        "schema_version": "model-roster-v1",
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "snapshot_id": "synthetic-roster-1",
+        "provider": "nous",
+        "captured_at": "2026-01-01T00:00:00Z",
+        "models": [
+            {
+                "model_id": model_id,
+                "requested_model_id": model_id,
+                "resolved_model_id": model_id,
+                "provider_requested": "nous",
+                "provider_resolved": "nous",
+                "availability": "eligible",
+            }
+            for model_id in model_ids
+        ],
+    }
+
+
+def _build_synthetic_input(
+    root: Path,
+    *,
+    passed_tasks_by_model: dict[str, set[str]],
+    roster: dict[str, Any] | None = None,
+    records_override: list[dict[str, Any]] | None = None,
+) -> Path:
+    ledger = _base_ledger()
+    _write_json(root / "ledger.json", ledger)
+    _write_json(root / "policy.json", _base_policy())
+    _write_json(root / "roster.json", roster or _base_roster(tuple(passed_tasks_by_model)))
+    input_manifest = {
+        "schema_version": "leaderboard-input-v1",
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "snapshot_id": "synthetic-input-1",
+        "roster_path": "roster.json",
+        "runs": [],
+    }
+    records = records_override or []
+    if not records:
+        sequence = 1
+        for model_id, passed_tasks in passed_tasks_by_model.items():
+            for task in ledger["tasks"]:
+                records.append(_run_record(model_id, task["id"], task["id"] in passed_tasks, sequence))
+                sequence += 1
+    for record in records:
+        record_path = root / "records" / f"{record['run_id']}.json"
+        raw_path = root / record["raw_output_reference"]
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
+        raw_path.write_text("{}\n", encoding="utf-8")
+        _write_json(record_path, record)
+        input_manifest["runs"].append(
+            {"run_id": record["run_id"], "record_path": record_path.relative_to(root).as_posix()}
+        )
+    _write_json(root / "input.json", input_manifest)
+    return root / "input.json"
+
+
+def _run_builder(
+    root: Path,
+    *,
+    allow_untrusted_inputs: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    command = [
+        sys.executable,
+        str(BUILDER),
+        "--root",
+        str(root),
+        "--ledger",
+        "ledger.json",
+        "--policy",
+        "policy.json",
+        "--input",
+        "input.json",
+        "--output",
+        "leaderboard.json",
+    ]
+    if allow_untrusted_inputs:
+        command.append("--allow-untrusted-inputs")
+    return subprocess.run(
+        command,
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+class LeaderboardTests(unittest.TestCase):
+    def test_custom_inputs_require_an_explicit_untrusted_override(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+            )
+            result = _run_builder(root, allow_untrusted_inputs=False)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("allow-untrusted-inputs", result.stderr)
+            self.assertFalse((root / "leaderboard.json").exists())
+
+    def test_checked_in_policy_is_versioned_and_schema_valid(self) -> None:
+        self.assertTrue(POLICY.is_file(), "the checked-in leaderboard policy is required")
+        self.assertTrue(POLICY_SCHEMA.is_file(), "the leaderboard policy schema is required")
+        from scripts.validate_benchmark import validate_schema_instance
+        from scripts.validate_benchmark import _canonical_fingerprint
+        from scripts.build_leaderboard import EXPECTED_POLICY_FINGERPRINT
+
+        policy = json.loads(POLICY.read_text(encoding="utf-8"))
+        schema = json.loads(POLICY_SCHEMA.read_text(encoding="utf-8"))
+        self.assertEqual(validate_schema_instance(policy, schema), [])
+        self.assertEqual(policy["policy_id"], "leaderboard-v2")
+        self.assertEqual(policy["policy_version"], "2.0.0")
+        self.assertEqual(_canonical_fingerprint(policy), EXPECTED_POLICY_FINGERPRINT)
+
+    def test_policy_gates_are_applied_to_coverage_and_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task_ids = ("ALPHA-01", "ALPHA-02", "BETA-01", "BETA-02")
+            records = [
+                _run_record("model-a:free", task_id, True, sequence)
+                for sequence, task_id in enumerate(task_ids, start=1)
+            ]
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            policy_path = root / "policy.json"
+            policy = json.loads(policy_path.read_text(encoding="utf-8"))
+            policy["coverage"]["provisional_min_task_coverage"] = 0.5
+            policy["publication"]["score_publishable_requires_complete_overall_coverage"] = False
+            policy["publication"]["routing_requires_confirmed_model_per_role"] = False
+            _write_json(policy_path, policy)
+
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["overall"]["ranked"][0]["status"], "provisional")
+            self.assertAlmostEqual(
+                output["overall"]["ranked"][0]["coverage"]["task_coverage_rate"],
+                4 / 6,
+                places=5,
+            )
+            self.assertTrue(output["publication"]["score_publishable"])
+            self.assertTrue(output["publication"]["routing_recommendation_allowed"])
+
+    def test_policy_version_is_pinned_for_leaderboard_v2(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_synthetic_input(root, passed_tasks_by_model={"model-a:free": set()})
+            policy_path = root / "policy.json"
+            policy = json.loads(policy_path.read_text(encoding="utf-8"))
+            policy["policy_version"] = "1.0.1"
+            _write_json(policy_path, policy)
+
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("policy_version", result.stderr)
+
+    def test_incomplete_global_coverage_stays_unranked_but_role_view_can_rank(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = [
+                _run_record("model-a:free", task_id, True, sequence)
+                for sequence, task_id in enumerate(("ALPHA-01", "ALPHA-02"), start=1)
+            ]
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["overall"]["ranked"], [])
+            self.assertEqual(output["overall"]["unranked"][0]["status"], "unranked")
+            self.assertFalse(output["publication"]["ranking_available"])
+            self.assertEqual(
+                [item["model_id"] for item in output["roles"]["alpha"]["ranked"]],
+                ["model-a:free"],
+            )
+            self.assertEqual(output["roles"]["alpha"]["ranked"][0]["status"], "provisional")
+            self.assertEqual(output["roles"]["beta"]["ranked"], [])
+
+    def test_repeated_complete_coverage_is_confirmed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task_ids = [task["id"] for task in _base_ledger()["tasks"]]
+            records = [
+                _run_record("model-a:free", task_id, True, sequence)
+                for sequence, task_id in enumerate(task_ids * 3, start=1)
+            ]
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["overall"]["ranked"][0]["status"], "confirmed")
+            model = output["models"][0]
+            self.assertEqual(model["coverage"]["minimum_replicates"], 3)
+            self.assertEqual(model["coverage"]["maximum_replicates"], 3)
+            self.assertTrue(output["publication"]["routing_recommendation_allowed"])
+
+    def test_blocked_evidence_is_visible_but_not_comparable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = []
+            for sequence, task in enumerate(_base_ledger()["tasks"], start=1):
+                record = _run_record("model-a:free", task["id"], True, sequence)
+                record["status"] = "blocked"
+                record["execution_status"] = "blocked"
+                record["failure_class"] = "unverified-isolation"
+                record["automatic_checks"][0]["status"] = "blocked"
+                records.append(record)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["overall"]["ranked"], [])
+            self.assertEqual(output["overall"]["unranked"][0]["status"], "unranked")
+            self.assertEqual(output["aggregate"]["comparable_resolved_runs"], 0)
+            self.assertEqual(output["aggregate"]["excluded_provider_or_identity_runs"], 0)
+            self.assertEqual(output["aggregate"]["blocked_or_unverified_runs"], len(records))
+            self.assertEqual(output["models"][0]["coverage"]["comparable_runs"], 0)
+            cell = output["models"][0]["task_cells"][0]
+            self.assertEqual(cell["excluded_provider_or_identity_runs"], 0)
+            self.assertEqual(cell["blocked_or_unverified_runs"], 1)
+
+    def test_duplicate_raw_output_reference_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = _run_record("model-a:free", "ALPHA-01", True, 1)
+            second = _run_record("model-a:free", "ALPHA-02", True, 2)
+            second["raw_output_reference"] = first["raw_output_reference"]
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=[first, second],
+            )
+
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("duplicate raw output reference", result.stderr)
+
+    def test_trusted_release_binds_composed_input_fingerprint(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            record = _run_record("model-a:free", "COS-01", True, 1)
+            trusted_bindings = _trusted_task_bindings({"COS-01": "cos"})
+            record.update(trusted_bindings["COS-01"])
+            record["input_fingerprint"] = FINGERPRINT
+            record_path = root / "record.json"
+            raw_path = root / record["raw_output_reference"]
+            raw_path.parent.mkdir(parents=True, exist_ok=True)
+            raw_path.write_text("{}\n", encoding="utf-8")
+            _write_json(record_path, record)
+            manifest = {
+                "benchmark_id": "staffbench",
+                "benchmark_version": "0.5.0",
+                "runs": [{"run_id": record["run_id"], "record_path": "record.json"}],
+            }
+
+            with self.assertRaisesRegex(LeaderboardInputError, "input_fingerprint"):
+                _load_records(
+                    manifest,
+                    _base_roster(("model-a:free",)),
+                    root,
+                    {"COS-01": "cos"},
+                    DEFAULT_RUN_SCHEMA,
+                    _base_policy(),
+                    trusted_bindings,
+                )
+
+    def test_blocked_latency_does_not_affect_comparable_median(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = [
+                _run_record("model-a:free", task["id"], True, sequence)
+                for sequence, task in enumerate(_base_ledger()["tasks"], start=1)
+            ]
+            blocked = _run_record("model-a:free", "ALPHA-01", True, 99)
+            blocked["status"] = "blocked"
+            blocked["execution_status"] = "blocked"
+            blocked["failure_class"] = "unverified-isolation"
+            blocked["automatic_checks"][0]["status"] = "blocked"
+            blocked["latency_ms"] = 999999
+            records.append(blocked)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            median = output["overall"]["ranked"][0]["metrics"]["median_latency_ms"]
+            self.assertEqual(median, 103.5)
+            self.assertNotEqual(median, 999999)
+
+    def test_duplicate_requested_roster_identity_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            roster = _base_roster(("model-a:free", "model-b:free"))
+            roster["models"][1]["requested_model_id"] = "model-a:free"
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set(), "model-b:free": set()},
+                roster=roster,
+            )
+
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("requested model ID", result.stderr)
+
+    def test_hard_failure_prevents_full_pass_even_if_status_is_passed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = []
+            for sequence, task in enumerate(_base_ledger()["tasks"], start=1):
+                record = _run_record("model-a:free", task["id"], True, sequence)
+                record["hard_failures"] = [
+                    {"id": "unsafe-result", "condition": "test", "evidence": ["synthetic failure"]}
+                ]
+                records.append(record)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            metrics = output["overall"]["ranked"][0]["metrics"]
+            self.assertEqual(metrics["full_contract_pass_rate"], 0)
+            self.assertEqual(metrics["hard_failure_rate"], 1)
+
+    def test_excluded_roster_identity_is_visible_and_never_ranked(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            roster = _base_roster(("tencent/hy3:free",))
+            roster["models"][0].update(
+                {
+                    "resolved_model_id": "unresolved",
+                    "provider_resolved": "unresolved",
+                    "availability": "excluded",
+                    "exclusion_reason": "Nous reported that the free period had ended",
+                }
+            )
+            record = _run_record("tencent/hy3:free", "ALPHA-01", False, 1)
+            record.update(
+                {
+                    "model_resolved": "unresolved",
+                    "provider_resolved": "unresolved",
+                    "resolution_status": "unresolved",
+                    "execution_status": "failed",
+                    "hard_failures": [
+                        {"id": "invalid-output", "condition": "provider", "evidence": ["HTTP 404"]}
+                    ],
+                }
+            )
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"tencent/hy3:free": set()},
+                roster=roster,
+                records_override=[record],
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["overall"]["ranked"], [])
+            self.assertEqual(output["overall"]["excluded"][0]["model_id"], "tencent/hy3:free")
+            self.assertEqual(output["overall"]["excluded"][0]["status"], "excluded")
+            self.assertEqual(output["models"][0]["exclusion_reason"], "Nous reported that the free period had ended")
+            self.assertEqual(output["aggregate"]["attempted_runs"], 1)
+            self.assertEqual(output["aggregate"]["comparable_resolved_runs"], 0)
+            self.assertEqual(output["aggregate"]["excluded_provider_or_identity_runs"], 1)
+            self.assertEqual(output["aggregate"]["hard_failure_runs"], 0)
+
+    def test_excluded_roster_entity_never_contributes_even_with_resolved_run(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model_id = "tencent/hy3:free"
+            roster = _base_roster((model_id,))
+            roster["models"][0].update(
+                {
+                    "availability": "excluded",
+                    "exclusion_reason": "free period ended",
+                }
+            )
+            record = _run_record(model_id, "ALPHA-01", True, 1)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={model_id: set()},
+                roster=roster,
+                records_override=[record],
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["aggregate"]["comparable_resolved_runs"], 0)
+            self.assertEqual(output["aggregate"]["excluded_provider_or_identity_runs"], 1)
+            self.assertIsNone(output["models"][0]["metrics"]["full_contract_pass_rate"])
+
+    def test_excluded_roster_models_are_not_planned_or_counted_as_launch_failures(self) -> None:
+        """Regression: excluded models were counted as planned cells and launch failures.
+
+        The matrix runner never launches excluded roster models, so a roster of
+        two eligible models and two excluded models over six tasks plans 12
+        cells, not 24. The aggregate validator must accept the builder's counts.
+        """
+        from scripts.leaderboard_aggregate import validate_aggregate
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model_ids = ("model-a:free", "model-b:free", "gone-a:free", "gone-b:free")
+            roster = _base_roster(model_ids)
+            for model in roster["models"][2:]:
+                model.update(availability="excluded", exclusion_reason="free period ended")
+            task_ids = [task["id"] for task in _base_ledger()["tasks"]]
+            records = [
+                _run_record(model_id, task_id, True, sequence)
+                for sequence, (model_id, task_id) in enumerate(
+                    ((model_id, task_id) for model_id in model_ids[:2] for task_id in task_ids),
+                    start=1,
+                )
+            ]
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={model_id: set() for model_id in model_ids},
+                roster=roster,
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["aggregate"]["planned_cells"], 12)
+            self.assertEqual(output["aggregate"]["launch_failures"], 0)
+            self.assertEqual(output["aggregate"]["attempted_runs"], 12)
+            self.assertEqual(
+                [row["model_id"] for row in output["overall"]["excluded"]],
+                ["gone-a:free", "gone-b:free"],
+            )
+            validate_aggregate(output["aggregate"])
+
+            # A genuinely missing eligible cell is still a launch failure, and
+            # the aggregate validator still agrees with the builder.
+            (root / "leaderboard.json").unlink()
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={model_id: set() for model_id in model_ids},
+                roster=roster,
+                records_override=records[:-1],
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["aggregate"]["planned_cells"], 12)
+            self.assertEqual(output["aggregate"]["launch_failures"], 1)
+            validate_aggregate(output["aggregate"])
+
+    def test_usage_summary_reports_mean_output_tokens_over_comparable_runs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = [
+                _run_record("model-a:free", task_id, True, sequence)
+                for sequence, task_id in enumerate(("ALPHA-01", "ALPHA-02", "BETA-01"), start=1)
+            ]
+            records[0]["usage"]["output_tokens"] = 100
+            records[1]["usage"]["output_tokens"] = 300
+            records[2]["status"] = "blocked"
+            records[2]["execution_status"] = "blocked"
+            records[2]["usage"]["output_tokens"] = 9000
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                output["models"][0]["usage"],
+                {"mean_output_tokens": 200.0, "output_token_runs": 2, "comparable_runs": 2},
+            )
+            traces = {
+                run["run_id"]: run["output_tokens"]
+                for cell in output["models"][0]["task_cells"]
+                for run in cell["runs"]
+            }
+            self.assertEqual(sorted(traces.values()), [100, 300, 9000])
+
+    def test_unresolved_runtime_identity_is_excluded_without_aborting_build(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model_id = "model-a:free"
+            record = _run_record(model_id, "ALPHA-01", False, 1)
+            record.update(
+                {
+                    "model_resolved": "unresolved",
+                    "provider_resolved": "unresolved",
+                    "resolution_status": "unresolved",
+                    "execution_status": "failed",
+                    "failure_class": "usage-failure",
+                    "status": "failed",
+                }
+            )
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={model_id: set()},
+                records_override=[record],
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(output["overall"]["ranked"], [])
+            self.assertEqual(output["overall"]["unranked"][0]["model_id"], model_id)
+            self.assertEqual(output["aggregate"]["attempted_runs"], 1)
+            self.assertEqual(output["aggregate"]["comparable_resolved_runs"], 0)
+            self.assertEqual(output["aggregate"]["excluded_provider_or_identity_runs"], 1)
+
+    def test_overall_ranking_weights_roles_equally(self) -> None:
+        """A four-task role must not outweigh a two-task role."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            passed_tasks_by_model = {
+                "model-a:free": {"ALPHA-01", "ALPHA-02", "BETA-01", "BETA-02"},
+                "model-b:free": {"BETA-01", "BETA-02", "BETA-03", "BETA-04"},
+            }
+            _build_synthetic_input(root, passed_tasks_by_model=passed_tasks_by_model)
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            ranked = output["overall"]["ranked"]
+            self.assertEqual([item["model_id"] for item in ranked], ["model-a:free", "model-b:free"])
+            self.assertAlmostEqual(ranked[0]["metrics"]["full_contract_pass_rate"], 0.75)
+            self.assertAlmostEqual(ranked[1]["metrics"]["full_contract_pass_rate"], 0.5)
+
+    def test_human_scores_are_normalized_without_overriding_contract_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task_ids = [task["id"] for task in _base_ledger()["tasks"]]
+            records = []
+            for sequence, task_id in enumerate(task_ids, start=1):
+                record = _run_record("model-a:free", task_id, True, sequence)
+                record["human_scores"] = {"dimensions": {"quality": 4}}
+                records.append(record)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            metrics = output["overall"]["ranked"][0]["metrics"]
+            self.assertEqual(metrics["full_contract_pass_rate"], 1)
+            self.assertEqual(metrics["human_quality_score"], 1)
+            self.assertEqual(metrics["human_score_coverage"], 1)
+
+    def test_tie_breakers_are_applied_in_declared_order(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            task_ids = [task["id"] for task in _base_ledger()["tasks"]]
+            records = []
+            sequence = 1
+            for model_id, score in (("model-a:free", 2), ("model-b:free", 4)):
+                for task_id in task_ids:
+                    record = _run_record(model_id, task_id, True, sequence)
+                    record["human_scores"] = {"score": score}
+                    records.append(record)
+                    sequence += 1
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set(), "model-b:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                [item["model_id"] for item in output["overall"]["ranked"]],
+                ["model-b:free", "model-a:free"],
+            )
+
+    def test_invalid_output_is_counted_and_cannot_be_a_full_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = []
+            for sequence, task in enumerate(_base_ledger()["tasks"], start=1):
+                record = _run_record("model-a:free", task["id"], False, sequence)
+                record["hard_failures"] = [
+                    {"id": "invalid-output", "condition": "decoder", "evidence": ["invalid JSON"]}
+                ]
+                records.append(record)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            metrics = output["overall"]["ranked"][0]["metrics"]
+            self.assertEqual(metrics["full_contract_pass_rate"], 0)
+            self.assertEqual(metrics["hard_failure_rate"], 1)
+            self.assertEqual(metrics["invalid_output_rate"], 1)
+
+    def test_output_schema_and_raw_run_references_are_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={
+                    "model-a:free": {task["id"] for task in _base_ledger()["tasks"]},
+                },
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            schema = json.loads((ROOT / "schemas" / "leaderboard-output.schema.json").read_text(encoding="utf-8"))
+            from scripts.validate_benchmark import validate_schema_instance
+
+            self.assertEqual(validate_schema_instance(output, schema), [])
+            cell = output["models"][0]["task_cells"][0]
+            self.assertEqual(cell["comparable_runs"], 1)
+            self.assertTrue(cell["runs"][0]["record_path"].startswith("records/"))
+            self.assertTrue(cell["runs"][0]["raw_output_reference"].startswith("runs/"))
+
+    def test_tampered_raw_output_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={
+                    "model-a:free": {task["id"] for task in _base_ledger()["tasks"]},
+                },
+            )
+            raw_path = root / "runs" / "model-a-free-ALPHA-01-1.txt"
+            raw_path.write_text("tampered\n", encoding="utf-8")
+            result = _run_builder(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("fingerprint", result.stderr)
+
+    def test_aggregate_counts_are_explicit_and_identity_aware(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = []
+            for sequence, task in enumerate(_base_ledger()["tasks"], start=1):
+                records.append(_run_record("model-a:free", task["id"], True, sequence))
+                invalid = _run_record("model-b:free", task["id"], False, sequence + 6)
+                invalid["hard_failures"] = [
+                    {"id": "invalid-output", "condition": "decoder", "evidence": ["invalid JSON"]}
+                ]
+                invalid["output_parse_status"] = "invalid-json"
+                records.append(invalid)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set(), "model-b:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            aggregate = output["aggregate"]
+            self.assertEqual(
+                {
+                    key: aggregate[key]
+                    for key in (
+                        "attempted_runs",
+                        "comparable_resolved_runs",
+                        "excluded_provider_or_identity_runs",
+                        "blocked_or_unverified_runs",
+                        "full_contract_pass_runs",
+                        "all_automatic_checks_pass_runs",
+                        "hard_failure_runs",
+                        "invalid_output_runs",
+                        "process_or_timeout_failures",
+                        "human_scores_assigned",
+                    )
+                },
+                {
+                    "attempted_runs": 12,
+                    "comparable_resolved_runs": 12,
+                    "excluded_provider_or_identity_runs": 0,
+                    "blocked_or_unverified_runs": 0,
+                    "full_contract_pass_runs": 6,
+                    "all_automatic_checks_pass_runs": 6,
+                    "hard_failure_runs": 6,
+                    "invalid_output_runs": 6,
+                    "process_or_timeout_failures": 0,
+                    "human_scores_assigned": False,
+                },
+            )
+            self.assertEqual(
+                {
+                    key: aggregate[key]
+                    for key in (
+                        "planned_cells",
+                        "launch_failures",
+                        "completed_execution_records",
+                        "execution_blocked_runs",
+                        "resolved_identity_runs",
+                        "parseable_output_runs",
+                        "non_json_output_runs",
+                        "all_attempt_hard_failure_runs",
+                        "all_attempt_hard_failure_entries",
+                        "all_attempt_invalid_output_runs",
+                        "evaluator_blocked_runs",
+                        "comparable_full_contract_pass_runs",
+                        "comparable_automatic_check_pass_runs",
+                        "comparable_process_or_timeout_failures",
+                        "comparable_hard_failure_runs",
+                        "comparable_invalid_output_runs",
+                    )
+                },
+                {
+                    "planned_cells": 12,
+                    "launch_failures": 0,
+                    "completed_execution_records": 12,
+                    "execution_blocked_runs": 0,
+                    "resolved_identity_runs": 12,
+                    "parseable_output_runs": 6,
+                    "non_json_output_runs": 6,
+                    "all_attempt_hard_failure_runs": 6,
+                    "all_attempt_hard_failure_entries": 6,
+                    "all_attempt_invalid_output_runs": 6,
+                    "evaluator_blocked_runs": 0,
+                    "comparable_full_contract_pass_runs": 6,
+                    "comparable_automatic_check_pass_runs": 6,
+                    "comparable_process_or_timeout_failures": 0,
+                    "comparable_hard_failure_runs": 6,
+                    "comparable_invalid_output_runs": 6,
+                },
+            )
+
+    def test_unexpected_input_keys_are_rejected_by_the_checked_in_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            input_path = _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+            )
+            input_manifest = json.loads(input_path.read_text(encoding="utf-8"))
+            input_manifest["unexpected"] = "must be rejected"
+            _write_json(input_path, input_manifest)
+            result = _run_builder(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("schema", result.stderr)
+
+    def test_mismatched_release_lock_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            records = []
+            for sequence, task in enumerate(_base_ledger()["tasks"], start=1):
+                record = _run_record("model-a:free", task["id"], True, sequence)
+                if sequence == 2:
+                    record["release_lock_fingerprint"] = "sha256:" + "1" * 64
+                records.append(record)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+                records_override=records,
+            )
+            result = _run_builder(root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("release-lock", result.stderr)
+
+    def test_new_roster_model_is_unranked_until_it_has_complete_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            roster = _base_roster(("model-a:free", "model-b:free"))
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={
+                    "model-a:free": {task["id"] for task in _base_ledger()["tasks"]},
+                },
+                roster=roster,
+            )
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            self.assertEqual([item["model_id"] for item in output["overall"]["ranked"]], ["model-a:free"])
+            self.assertEqual(output["overall"]["unranked"][0]["model_id"], "model-b:free")
+            self.assertEqual(output["overall"]["unranked"][0]["reason_codes"], ["incomplete-task-coverage", "no-evidence"])
+
+    def test_empty_input_remains_schema_valid_and_unranked(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            input_path = _build_synthetic_input(
+                root,
+                passed_tasks_by_model={"model-a:free": set()},
+            )
+            input_manifest = json.loads(input_path.read_text(encoding="utf-8"))
+            input_manifest["runs"] = []
+            _write_json(input_path, input_manifest)
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            output = json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+            schema = json.loads((ROOT / "schemas" / "leaderboard-output.schema.json").read_text(encoding="utf-8"))
+            from scripts.validate_benchmark import validate_schema_instance
+
+            self.assertEqual(validate_schema_instance(output, schema), [])
+            self.assertNotIn("release_lock_fingerprint", output)
+            self.assertEqual(output["overall"]["ranked"], [])
+            self.assertEqual(output["overall"]["unranked"][0]["reason_codes"], ["incomplete-task-coverage", "no-evidence"])
+
+    def test_generation_is_byte_deterministic_when_input_runs_are_reordered(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            input_path = _build_synthetic_input(
+                root,
+                passed_tasks_by_model={
+                    "model-a:free": {task["id"] for task in _base_ledger()["tasks"]},
+                    "model-b:free": set(),
+                },
+            )
+            first = _run_builder(root)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            first_bytes = (root / "leaderboard.json").read_bytes()
+            input_manifest = json.loads(input_path.read_text(encoding="utf-8"))
+            input_manifest["runs"].reverse()
+            _write_json(input_path, input_manifest)
+            second = _run_builder(root)
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(first_bytes, (root / "leaderboard.json").read_bytes())
+
+    def test_generation_is_byte_deterministic_for_the_same_input(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_synthetic_input(
+                root,
+                passed_tasks_by_model={
+                    "model-a:free": {task["id"] for task in _base_ledger()["tasks"]},
+                    "model-b:free": set(),
+                },
+            )
+            first = _run_builder(root)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            first_bytes = (root / "leaderboard.json").read_bytes()
+            second = _run_builder(root)
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(first_bytes, (root / "leaderboard.json").read_bytes())
+
+
+
+TRV_TASKS = ("TRV-01", "TRV-02")
+
+
+def _trv_control(task_id: str, kind: str = "known-good") -> str:
+    path = ROOT / "fixtures" / task_id.lower() / "controls" / f"{kind}.json"
+    return json.dumps(json.loads(path.read_text(encoding="utf-8")), sort_keys=True)
+
+
+def _build_trv_input(root: Path, raw_by_task: dict[str, tuple[str, dict[str, Any]]]) -> None:
+    """Write a real-task (TRV) input where each run carries its own raw bytes.
+
+    ``raw_by_task`` maps task ID to (raw response text, run-record overrides).
+    Strict-JSON runs are scored from the recorded evaluation; every other run
+    is re-read from its raw bytes under leaderboard-v2.
+    """
+    ledger = {
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "roles": [{"id": "trv", "task_ids": list(TRV_TASKS)}],
+        "tasks": [{"id": task_id, "role_id": "trv"} for task_id in TRV_TASKS],
+    }
+    _write_json(root / "ledger.json", ledger)
+    _write_json(root / "policy.json", _base_policy())
+    _write_json(root / "roster.json", _base_roster(("model-a:free",)))
+    manifest = {
+        "schema_version": "leaderboard-input-v1",
+        "benchmark_id": "staffbench",
+        "benchmark_version": "0.5.0",
+        "snapshot_id": "synthetic-trv-1",
+        "roster_path": "roster.json",
+        "runs": [],
+    }
+    for sequence, task_id in enumerate(TRV_TASKS, start=1):
+        raw, overrides = raw_by_task[task_id]
+        record = _run_record("model-a:free", task_id, True, sequence)
+        record["role_id"] = "trv"
+        record.update(overrides)
+        raw_bytes = raw.encode("utf-8")
+        raw_path = root / record["raw_output_reference"]
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
+        raw_path.write_bytes(raw_bytes)
+        record["raw_output_fingerprint"] = "sha256:" + hashlib.sha256(raw_bytes).hexdigest()
+        record_path = root / "records" / f"{record['run_id']}.json"
+        _write_json(record_path, record)
+        manifest["runs"].append({"run_id": record["run_id"], "record_path": record_path.relative_to(root).as_posix()})
+    _write_json(root / "input.json", manifest)
+
+
+def _strict_failure_overrides() -> dict[str, Any]:
+    """What the strict runner records for any output that is not one bare object."""
+    return {
+        "status": "failed",
+        "output_parse_status": "invalid-json",
+        "automatic_checks": [
+            {"id": "required-fields", "status": "fail", "evidence": ["unable to read candidate output"]},
+            {"id": "budget", "status": "blocked", "evidence": ["candidate output could not be decoded"]},
+        ],
+        "hard_failures": [
+            {"id": "invalid-output", "condition": "not a JSON object", "evidence": ["JSONDecodeError"]}
+        ],
+    }
+
+
+class LeaderboardV2OutputScoringTests(unittest.TestCase):
+    def _build(self, raw_by_task: dict[str, tuple[str, dict[str, Any]]]) -> dict[str, Any]:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_trv_input(root, raw_by_task)
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads((root / "leaderboard.json").read_text(encoding="utf-8"))
+
+    @staticmethod
+    def _runs(output: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        model = output["models"][0]
+        return {cell["task_id"]: cell["runs"][0] for cell in model["task_cells"]}
+
+    def test_fenced_json_is_scored_on_its_content(self) -> None:
+        good = _trv_control("TRV-01")
+        bad = _trv_control("TRV-02", "known-bad")
+        output = self._build({
+            # The strict record says fail/blocked; v2 must re-score the content.
+            "TRV-01": (f"```json\n{good}\n```\n", _strict_failure_overrides()),
+            "TRV-02": (f"Here is the plan:\n\n```json\n{bad}\n```", _strict_failure_overrides()),
+        })
+        runs = self._runs(output)
+        self.assertEqual(runs["TRV-01"]["scoring_basis"], "format-recovered")
+        self.assertEqual(runs["TRV-01"]["output_format"], "markdown-fenced-json")
+        self.assertTrue(runs["TRV-01"]["full_contract_pass"])
+        self.assertEqual(runs["TRV-01"]["hard_failure_ids"], [])
+        self.assertFalse(runs["TRV-01"]["strict_json_valid"])
+        # A fence with a prose lead-in is not isolated, so it is not recovered.
+        self.assertEqual(runs["TRV-02"]["scoring_basis"], "unrecoverable-output")
+        self.assertFalse(runs["TRV-02"]["full_contract_pass"])
+        overall = output["overall"]["ranked"][0]
+        self.assertEqual(overall["metrics"]["full_contract_pass_rate"], 0.5)
+        self.assertEqual(output["aggregate"]["comparable_format_recovered_runs"], 1)
+        self.assertEqual(output["aggregate"]["comparable_unrecoverable_output_runs"], 1)
+
+    def test_recovered_wrong_answer_still_fails_on_content(self) -> None:
+        bad = _trv_control("TRV-01", "known-bad")
+        good = _trv_control("TRV-02")
+        output = self._build({
+            "TRV-01": (f"```json\n{bad}\n```", _strict_failure_overrides()),
+            "TRV-02": (good + "\n", {}),
+        })
+        runs = self._runs(output)
+        self.assertEqual(runs["TRV-01"]["scoring_basis"], "format-recovered")
+        self.assertFalse(runs["TRV-01"]["full_contract_pass"])
+        self.assertIn("incompatible-fuel", runs["TRV-01"]["hard_failure_ids"])
+        self.assertEqual(runs["TRV-02"]["scoring_basis"], "strict-json")
+        self.assertTrue(runs["TRV-02"]["full_contract_pass"])
+
+    def test_ambiguous_answer_counts_as_a_fail_rather_than_being_dropped(self) -> None:
+        good = _trv_control("TRV-01")
+        output = self._build({
+            "TRV-01": (f"Draft: {good}\nFinal: {good}", _strict_failure_overrides()),
+            "TRV-02": ('{"day_plan": [{"day_id": "day-1", "plan": "Reach', _strict_failure_overrides()),
+        })
+        runs = self._runs(output)
+        self.assertEqual(runs["TRV-01"]["output_format"], "ambiguous-json")
+        self.assertEqual(runs["TRV-02"]["output_format"], "invalid-json")
+        for run in runs.values():
+            self.assertEqual(run["scoring_basis"], "unrecoverable-output")
+            self.assertFalse(run["full_contract_pass"])
+            self.assertIn("invalid-output", run["hard_failure_ids"])
+            self.assertNotIn("blocked", run["automatic_check_statuses"])
+        model = output["models"][0]
+        self.assertEqual(model["coverage"]["comparable_runs"], 2)
+        self.assertEqual(model["coverage"]["excluded_runs"], 0)
+        # Complete coverage from failures: ranked, at 0%, not hidden as unranked.
+        ranked = output["overall"]["ranked"][0]
+        self.assertEqual(ranked["status"], "provisional")
+        self.assertEqual(ranked["metrics"]["full_contract_pass_rate"], 0)
+        self.assertEqual(ranked["metrics"]["invalid_output_rate"], 1)
+
+    def test_infrastructure_failure_stays_excluded(self) -> None:
+        good = _trv_control("TRV-02")
+        timeout = _strict_failure_overrides()
+        timeout.update({
+            "execution_status": "timed_out",
+            "failure_class": "timeout",
+            "resolution_status": "unresolved",
+            "model_resolved": "unresolved",
+            "provider_resolved": "unresolved",
+        })
+        output = self._build({"TRV-01": ("", timeout), "TRV-02": (good, {})})
+        runs = self._runs(output)
+        self.assertEqual(runs["TRV-01"]["scoring_basis"], "excluded-provider-or-identity")
+        model = output["models"][0]
+        self.assertEqual(model["coverage"]["comparable_runs"], 1)
+        self.assertEqual(model["coverage"]["excluded_runs"], 1)
+        self.assertEqual(output["aggregate"]["excluded_provider_or_identity_runs"], 1)
+        self.assertEqual(output["overall"]["unranked"][0]["model_id"], "model-a:free")
+
+    def test_failed_execution_with_unreadable_output_stays_excluded(self) -> None:
+        good = _trv_control("TRV-02")
+        rate_limited = _strict_failure_overrides()
+        rate_limited.update({"execution_status": "failed", "failure_class": "process-nonzero"})
+        output = self._build({
+            "TRV-01": ("Provider rate-limited every attempt (HTTP 429).", rate_limited),
+            "TRV-02": (good, {}),
+        })
+        runs = self._runs(output)
+        self.assertEqual(runs["TRV-01"]["scoring_basis"], "excluded-infrastructure")
+        self.assertEqual(output["aggregate"]["blocked_or_unverified_runs"], 1)
+        self.assertEqual(output["aggregate"]["comparable_resolved_runs"], 1)
+
+    def test_strict_json_valid_rate_is_reported_separately_from_the_score(self) -> None:
+        good_one = _trv_control("TRV-01")
+        good_two = _trv_control("TRV-02")
+        output = self._build({
+            "TRV-01": (f"```json\n{good_one}\n```", _strict_failure_overrides()),
+            "TRV-02": (good_two, {}),
+        })
+        ranked = output["overall"]["ranked"][0]
+        self.assertEqual(ranked["metrics"]["full_contract_pass_rate"], 1)
+        self.assertEqual(ranked["metrics"]["strict_json_valid_rate"], 0.5)
+        self.assertEqual(output["roles"]["trv"]["ranked"][0]["metrics"]["strict_json_valid_rate"], 0.5)
+        self.assertEqual(output["aggregate"]["comparable_strict_json_valid_runs"], 1)
+        cells = {cell["task_id"]: cell for cell in output["models"][0]["task_cells"]}
+        self.assertEqual(cells["TRV-01"]["metrics"]["strict_json_valid_rate"], 0)
+        self.assertEqual(cells["TRV-02"]["metrics"]["strict_json_valid_rate"], 1)
+
+    def test_leaderboard_v1_policy_is_refused_not_reinterpreted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            _build_trv_input(root, {task: (_trv_control(task), {}) for task in TRV_TASKS})
+            policy = _base_policy()
+            policy.update({"schema_version": "leaderboard-policy-v1", "policy_id": "leaderboard-v1", "policy_version": "1.0.0"})
+            del policy["output_scoring"]
+            _write_json(root / "policy.json", policy)
+            result = _run_builder(root)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("leaderboard policy", result.stderr)
+            self.assertFalse((root / "leaderboard.json").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

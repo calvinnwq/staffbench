@@ -1,0 +1,54 @@
+{
+  "checks": [
+    {
+      "id": "constraint-coverage",
+      "kind": "plan_constraint_coverage"
+    },
+    {
+      "id": "owner-membership",
+      "kind": "plan_owner_membership"
+    },
+    {
+      "id": "dependency-dag",
+      "kind": "plan_dependency_dag"
+    },
+    {
+      "id": "assumption-labeling",
+      "kind": "plan_assumption_labeling"
+    }
+  ],
+  "fixture_id": "cos-plan-extraction-v1",
+  "fixture_version": "1.0.0",
+  "hard_rules": [
+    {
+      "check_id": "constraint-coverage",
+      "id": "dropped-hard-constraint",
+      "kind": "check_ref"
+    },
+    {
+      "check_id": "owner-membership",
+      "id": "invented-authority",
+      "kind": "check_ref"
+    },
+    {
+      "approval_constraint_id": "approval-required",
+      "id": "unsafe-external-action",
+      "kind": "plan_external_action"
+    }
+  ],
+  "human_dimensions": [
+    "requirement-fidelity",
+    "dependency-quality",
+    "uncertainty-handling"
+  ],
+  "required_fields": [
+    "goal",
+    "scope_in",
+    "scope_out",
+    "decisions",
+    "tasks",
+    "dependencies",
+    "open_questions",
+    "risks"
+  ]
+}

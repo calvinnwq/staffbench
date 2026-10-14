@@ -38,6 +38,23 @@ class CheckPublicContentTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout.count("bad.md:"), 2)
 
+    def test_diff_decorator_lines_are_not_emails(self):
+        lines = ["+@contextlib.contextmanager", "-@functools.lru_cache", "+    @unittest.mock.patch"]
+        result = run([self.write("change.diff", "\n".join(lines) + "\n")])
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_email_after_diff_marker_still_fails(self):
+        lines = [
+            "+contact person@mail.test",  # public-content: allow
+            '+"person@mail.test"',  # public-content: allow
+            "+mailto:person@mail.test",  # public-content: allow
+            "+person@mail.test",  # public-content: allow
+            "-person@mail.test",  # public-content: allow
+        ]
+        result = run([self.write("change.diff", "\n".join(lines) + "\n")])
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout.count("change.diff:"), 5, result.stdout)
+
     def test_private_terms_and_allow_marker(self):
         terms = self.write("terms.txt", "# comment\n(?i)secretproject\n")
         target = self.write("page.html", "about SecretProject\nsecretproject public-content: allow\n")

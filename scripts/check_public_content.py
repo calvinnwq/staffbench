@@ -20,8 +20,10 @@ from pathlib import Path
 ALLOW_MARKER = "public-content: allow"
 _ALLOWED_EMAIL = re.compile(r"@(users\.noreply\.github\.com|example\.(com|org|net))$", re.I)
 BUILT_IN = [
-    re.compile(r"/(?:Users|home)/[A-Za-z0-9._-]+|/Volumes/"),
-    re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
+    re.compile(r"/(?:Users|home)/[A-Za-z0-9._-]+|/Volumes/"),  # public-content: allow
+    # The local part must start with a letter or digit, so a decorator after a diff marker
+    # ('+@contextlib.contextmanager') is not an address, while an address after '+' or '-' still is.
+    re.compile(r"[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
     re.compile(r"\b(?:sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}"
                r"|AKIA[0-9A-Z]{16}|xox[abprs]-[A-Za-z0-9-]{10,})\b"),
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),

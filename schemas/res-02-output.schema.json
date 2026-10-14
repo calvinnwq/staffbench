@@ -1,0 +1,78 @@
+{
+  "$id": "https://github.com/calvinnwq/staffbench/blob/main/schemas/res-02-output.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "caveats": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "memory_calculations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "q4_total_gb",
+        "q6_total_gb",
+        "q8_total_gb"
+      ],
+      "properties": {
+        "q4_total_gb": {
+          "type": "number"
+        },
+        "q6_total_gb": {
+          "type": "number"
+        },
+        "q8_total_gb": {
+          "type": "number"
+        }
+      }
+    },
+    "option_table": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "total_gb"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "q4",
+              "q6",
+              "q8"
+            ]
+          },
+          "total_gb": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "recommendation": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "requirement_match": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "tradeoffs": {
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "memory_calculations",
+    "option_table",
+    "requirement_match",
+    "recommendation",
+    "tradeoffs",
+    "caveats"
+  ],
+  "title": "RES-02 candidate output",
+  "type": "object"
+}

@@ -1,0 +1,52 @@
+{
+  "allowed_tools": [],
+  "benchmark_ready": true,
+  "benchmark_version": "0.5.0",
+  "controls": [
+    {
+      "condition": "known-good-control",
+      "expected_status": "passed",
+      "path": "controls/known-good.json",
+      "sha256": "sha256:b771143bfffa2e7e5b29bc3d0c94d511f00c2c46e6b53a6d526f373f95796c29"
+    },
+    {
+      "condition": "known-bad-control",
+      "expected_status": "failed",
+      "path": "controls/known-bad.json",
+      "sha256": "sha256:0b32937e9181dcf8444706c649e92a71869641aa4c1efa1bcb27249e856ed256"
+    }
+  ],
+  "evaluator": {
+    "path": "../../scripts/evaluate_task.py",
+    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
+    "version": "task-oracle-v3"
+  },
+  "fixture": {
+    "id": "cos-conflicting-handoffs-v1",
+    "path": "input.json",
+    "sha256": "sha256:8d99d66e2a191842c532b2a72e08c213b1a425a651a60d9f5fc2f56da1e8d569",
+    "status": "frozen",
+    "version": "1.0.0"
+  },
+  "oracle": {
+    "path": "../../oracles/cos-02.json",
+    "sha256": "sha256:ba49dca3dfd7edbe67e4f1149eeaaf26e6527fce4d3364201ef289499f679781"
+  },
+  "output_schema": {
+    "path": "../../schemas/cos-02-output.schema.json",
+    "sha256": "sha256:d6c545f8f4a2dde9213d89589c23b21e14ec2082b4466fd24b705b71f78451f6"
+  },
+  "prompt": {
+    "path": "prompt.txt",
+    "sha256": "sha256:3e4ed3a2b3732456e5b2eba022bdf38510a2a5ed57d80d5194fe12cbc258203d",
+    "status": "frozen"
+  },
+  "release_gate": "../../scripts/validate_benchmark_ready.py",
+  "role_id": "cos",
+  "run_record_schema": {
+    "path": "../../schemas/task-run-record.schema.json",
+    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+  },
+  "status": "benchmark-ready",
+  "task_id": "COS-02"
+}

@@ -1,0 +1,52 @@
+{
+  "allowed_tools": [],
+  "benchmark_ready": true,
+  "benchmark_version": "0.5.0",
+  "controls": [
+    {
+      "condition": "known-good-control",
+      "expected_status": "passed",
+      "path": "controls/known-good.json",
+      "sha256": "sha256:c669bea95cf2346ace08ecac0f05d54284f11996fc097b0e6136bd5f4f607e81"
+    },
+    {
+      "condition": "known-bad-control",
+      "expected_status": "failed",
+      "path": "controls/known-bad.json",
+      "sha256": "sha256:bb4fb363a85b4bbf43e8adecb222e1b5f3ddf05a8b1e941572458eda90ad24eb"
+    }
+  ],
+  "evaluator": {
+    "path": "../../scripts/evaluate_task.py",
+    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
+    "version": "task-oracle-v3"
+  },
+  "fixture": {
+    "id": "trv-cook-kit-selection-v1",
+    "path": "input.json",
+    "sha256": "sha256:5c6dc864a3634a869e3ea670bd847cce6b6465a39ceb17e25b2b80d326a7d886",
+    "status": "frozen",
+    "version": "1.0.0"
+  },
+  "oracle": {
+    "path": "../../oracles/trv-01.json",
+    "sha256": "sha256:1da88b2def47e9de1bb4082b531c4ae00b94bde4033593cc06fe8910c8359da2"
+  },
+  "output_schema": {
+    "path": "../../schemas/trv-01-output.schema.json",
+    "sha256": "sha256:cbc90508808c4a9898a5bd1d015f941cc798f1bf63809cab0c488efb8cbfe88a"
+  },
+  "prompt": {
+    "path": "prompt.txt",
+    "sha256": "sha256:89f874077a04ebd0782093708764cc1db1efb90bd1bab4ffbf402f8d1515fc3e",
+    "status": "frozen"
+  },
+  "release_gate": "../../scripts/validate_benchmark_ready.py",
+  "role_id": "trv",
+  "run_record_schema": {
+    "path": "../../schemas/task-run-record.schema.json",
+    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+  },
+  "status": "benchmark-ready",
+  "task_id": "TRV-01"
+}

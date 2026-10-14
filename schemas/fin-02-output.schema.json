@@ -1,0 +1,82 @@
+{
+  "$id": "https://github.com/calvinnwq/staffbench/blob/main/schemas/fin-02-output.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assumptions": {
+      "minItems": 1,
+      "type": "array"
+    },
+    "calculations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "growth_base_value",
+        "growth_stress_value",
+        "steady_base_value",
+        "steady_stress_value"
+      ],
+      "properties": {
+        "growth_base_value": {
+          "type": "number"
+        },
+        "growth_stress_value": {
+          "type": "number"
+        },
+        "steady_base_value": {
+          "type": "number"
+        },
+        "steady_stress_value": {
+          "type": "number"
+        }
+      }
+    },
+    "liquidity_comparison": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "recommendation": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "risk_comparison": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "scenario_table": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scenario_id",
+          "steady_value",
+          "growth_value"
+        ],
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "enum": [
+              "base",
+              "stress",
+              "recovery"
+            ]
+          },
+          "steady_value": {},
+          "growth_value": {}
+        }
+      }
+    }
+  },
+  "required": [
+    "scenario_table",
+    "calculations",
+    "liquidity_comparison",
+    "risk_comparison",
+    "recommendation",
+    "assumptions"
+  ],
+  "title": "FIN-02 candidate output",
+  "type": "object"
+}

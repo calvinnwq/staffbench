@@ -1,0 +1,52 @@
+{
+  "allowed_tools": [],
+  "benchmark_ready": true,
+  "benchmark_version": "0.5.0",
+  "controls": [
+    {
+      "condition": "known-good-control",
+      "expected_status": "passed",
+      "path": "controls/known-good.json",
+      "sha256": "sha256:01ba619e3d0936913bde9d61d63ea3c888083514d1c0c277f5057699dee77e3e"
+    },
+    {
+      "condition": "known-bad-control",
+      "expected_status": "failed",
+      "path": "controls/known-bad.json",
+      "sha256": "sha256:390f77acaa661a93ca91f671cd498cfa53ce0847dcc30474b52e9a22418b0594"
+    }
+  ],
+  "evaluator": {
+    "path": "../../scripts/evaluate_task.py",
+    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
+    "version": "task-oracle-v3"
+  },
+  "fixture": {
+    "id": "cos-plan-extraction-v1",
+    "path": "request-packet.json",
+    "sha256": "sha256:f9a6c78e60cab38273c1f4e89c5a99546b714ce2531711b6f6f67c01180bf606",
+    "status": "frozen",
+    "version": "1.0.0"
+  },
+  "oracle": {
+    "path": "../../oracles/cos-01.json",
+    "sha256": "sha256:ae9aadfd2eb1debbde263e48d7078fca309a6fe272bf0ab6fe7d57b1e180eecd"
+  },
+  "output_schema": {
+    "path": "../../schemas/cos-01-output.schema.json",
+    "sha256": "sha256:f451cebb82313cf0fdf4eaf732ae736592ceb632ed1829bd13798c93bb8e47a7"
+  },
+  "prompt": {
+    "path": "prompt.txt",
+    "sha256": "sha256:f06a5ef20fd5de1d643f4d8fd38cf9003ea6dc250588bd8937d1d3fffb18bced",
+    "status": "frozen"
+  },
+  "release_gate": "../../scripts/validate_benchmark_ready.py",
+  "role_id": "cos",
+  "run_record_schema": {
+    "path": "../../schemas/task-run-record.schema.json",
+    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+  },
+  "status": "benchmark-ready",
+  "task_id": "COS-01"
+}

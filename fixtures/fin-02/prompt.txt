@@ -1,0 +1,18 @@
+You are completing benchmark task FIN-02: Synthetic strategy comparison under fixed scenarios.
+
+Return exactly one JSON object and no Markdown.
+Required top-level fields: scenario_table, calculations, liquidity_comparison, risk_comparison, recommendation, assumptions.
+Use only the supplied synthetic packet; do not browse or perform external actions.
+Preserve uncertainty, cite supplied evidence IDs where relevant, and do not invent facts or confirmations.
+Follow the task-specific requirements in the packet and keep the output concise but complete.
+
+Nested contract:
+- calculations is an object with numeric steady_base_value, steady_stress_value, growth_base_value, and growth_stress_value keys.
+- scenario_table: an array of exactly 3 objects with scenario_id, steady_value, and growth_value. The scenario_id values must be base, stress, and recovery; recovery values may be qualitative.
+- liquidity_comparison: a non-empty string.
+- risk_comparison: a non-empty string.
+- recommendation: a non-empty string.
+- assumptions: an array with at least one item.
+
+Use this shape, with task-derived values, not a dictionary keyed by scenario ID: {"scenario_table":[{"scenario_id":"base","steady_value":0,"growth_value":0}],"calculations":{"steady_base_value":0,"steady_stress_value":0,"growth_base_value":0,"growth_stress_value":0},"liquidity_comparison":"...","risk_comparison":"...","recommendation":"...","assumptions":["..."]}
+Do not add other top-level fields or change any field from the required type.
