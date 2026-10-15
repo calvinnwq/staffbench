@@ -32,6 +32,12 @@ class BuildOutput(BuildCase):
             self.assertTrue(page.startswith("<!doctype html>"), rel)
             self.assertIn("</html>", page, rel)
             self.assertNotIn("<script", page.lower(), rel)
+            footer_match = re.search(r'<footer\b.*?</footer>', page, re.S)
+            assert footer_match is not None, rel
+            footer = footer_match.group()
+            self.assertIn('Code: <a href="https://github.com/calvinnwq/staffbench/blob/main/LICENSE">MIT</a>.', footer, rel)
+            self.assertIn('Tasks and results: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.', footer, rel)
+            self.assertIn('href="https://github.com/calvinnwq/staffbench"', footer, rel)
 
     def test_output_is_byte_identical_across_builds(self):
         a, _ = self.build("a")
@@ -43,7 +49,7 @@ class BuildOutput(BuildCase):
         home = self.read(out, "index.html")
         self.assertIn(f'href="reports/{ALPHA_SLUG}/"', home)
         self.assertIn(f'href="reports/{BETA_SLUG}/"', home)
-        self.assertIn("<b>Quill 1</b> leads at 67%, but 2 models are statistically tied", home)
+        self.assertIn("<b>Quill 1</b> leads at 67%, but 2 models are too close to tell apart", home)
         self.assertIn("1 task beats every model", home)
         self.assertIn("Results pending", home)
         self.assertIn("<em>Three</em> hats", home)
@@ -54,11 +60,11 @@ class BuildOutput(BuildCase):
         rows = re.findall(r'<span class="fr-name"><b>([^<]+)</b>.*?<span class="fr-val"><b>([^<]+)</b><small>([^<]+)</small>', page, re.S)
         self.assertEqual(rows, [("Quill 1", "66.7%", "33&ndash;94"), ("Lark 2", "55.6%", "33&ndash;78"),
                                 ("Quill 1 Mini", "33.3%", "11&ndash;61"), ("Lark 2 Fast", "11.1%", "0&ndash;22")])
-        self.assertIn("<b>2 models</b> are statistically tied for first", page)
+        self.assertIn("<b>2 models</b> are too close to tell apart for first place", page)
         self.assertIn("<b>1 of 6 tasks</b> were never passed by any model", page)
         self.assertIn("One task beats every model on every run.", page)
         self.assertIn("Three models are on it, from Lark 2 Fast, the fastest, to Quill 1, the highest scoring.", page)
-        self.assertIn("<li><b>Wren 0</b> &mdash; Fixture model that never answered its test call</li>", page)
+        self.assertIn("<li><b>Wren 0</b> - Fixture model that never answered its test call</li>", page)
         self.assertIn('<span class="tag">fixture catch</span>', page)
         self.assertIn("Clearly behind the leader", page)
 
@@ -123,6 +129,10 @@ class ResultsPending(BuildCase):
         page = self.read(out, rel)
         self.assertIn("Report 01", page)
         self.assertIn("Hermes Agent \u00d7 Nous Portal free models", page)
+        published = json.loads((repo_reports / "nous-portal-free-models-2026-10/report.json").read_text())["published"]
+        self.assertNotEqual(published, "pending")
+        self.assertIn(f"Published {published}", page)
+        self.assertNotIn("Publication pending", page)
         self.assertIn("<h2>Results pending</h2>", page)
 
 

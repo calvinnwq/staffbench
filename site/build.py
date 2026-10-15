@@ -37,6 +37,9 @@ import stats  # noqa: E402
 from charts import E, join_and, pct, span  # noqa: E402
 
 BRAND = "StaffBench"
+LICENCE_NOTICE = ('<p>Code: <a href="https://github.com/calvinnwq/staffbench/blob/main/LICENSE">MIT</a>. '
+                  'Tasks and results: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. '
+                  '<a href="https://github.com/calvinnwq/staffbench">GitHub repository</a>.</p>')
 LEAK_CHECK = REPO / "scripts" / "check_public_content.py"
 ALLOW_MARKER = "public-content: allow"
 PAGE_NAMES = {"index.html", "404.html", "roles", "reports"}
@@ -229,7 +232,7 @@ class Site:
         <span class="rep-no">{upcoming:02d}</span>
         <span class="rep-main"><span class="rep-kicker">Next</span>
           <span class="rep-title">Another model pool</span>
-          <span class="rep-sum">Each report compares one pool of models, such as paid frontier models or local models, on the same tasks.</span></span>
+          <span class="rep-sum">Each report compares one pool of models, such as leading paid models or models run on your own computer, on the same tasks.</span></span>
       </li>''')
         runs_rule = (f"<li><b>{cap(word(self.runs))} runs each.</b> Reports show how often a model passes every time, not just once.</li>"
                      if self.runs else "<li><b>Repeated runs.</b> Reports show how often a model passes every time, not just once.</li>")
@@ -250,7 +253,7 @@ class Site:
 <main id="main" class="wrap">
   <section id="reports" class="sec">
     <div class="sec-h"><span class="no">01</span><div><h2>Reports</h2>
-      <p>A report is one comparison: one pool of models, one harness, one set of run dates. The tasks stay fixed, so you can line reports up against each other.</p></div></div>
+      <p>A report is one comparison: one pool of models, one test setup, one set of run dates. The tasks stay fixed, so you can line reports up against each other.</p></div></div>
     <ol class="reps">{"".join(cards)}</ol>
   </section>
   <section id="how" class="sec">
@@ -259,7 +262,7 @@ class Site:
     <ul class="rules-grid">
       <li><b>Fixed tasks, invented data.</b> {cap(word(self.tasks_per_role)) + " tasks" if self.tasks_per_role else "A few tasks"} per role, built from made-up people, numbers, logs and files.</li>
       <li><b>Offline.</b> No web and no tools. Everything the model needs is in the task.</li>
-      <li><b>Checked, not judged by vibes.</b> Automatic checks recompute totals, match IDs and look for seeded problems.</li>
+      <li><b>Checked, not judged by feel.</b> Automatic checks recalculate totals, match IDs and look for planted problems.</li>
       <li><b>Instant fails.</b> Serious mistakes, such as claiming an action was taken, fail the run.</li>
       {runs_rule}
       <li><b>Honest uncertainty.</b> Scores carry ranges, and models that cannot be told apart are shown as tied.</li>
@@ -267,7 +270,7 @@ class Site:
   </section>
 </main>
 <footer class="foot"><div class="wrap"><p>{BRAND} measures how models handle the structured work a personal agent does. It is not a general intelligence ranking.</p>
-<p><a href="roles/">The roles</a> &middot; Source and raw results: link added at launch</p></div></footer>'''
+<p><a href="roles/">The roles</a></p>{LICENCE_NOTICE}</div></footer>'''
         return self.shell(title=f"{BRAND} &middot; A benchmark for personal AI agents",
                           description=f"{BRAND}: an open benchmark of the jobs a personal AI agent does. {nr} roles, {nt} fixed tasks, and a separate report for each pool of models.",
                           path="", root="./", body=body, skip="Skip to reports")
@@ -280,7 +283,7 @@ class Site:
             leader, tied, never = s["models"][0], len(s["tied"]), len(s["never"])
             kicker = f'{date} &middot; {len(s["models"])} models &middot; {len(s["task_ids"])} tasks &times; {s["runs"]} runs'
             if tied > 1:
-                standing = f'<b>{E(leader["name"])}</b> leads at {pct(leader["rate"], 0)}, but {tied} models are statistically tied'
+                standing = f'<b>{E(leader["name"])}</b> leads at {pct(leader["rate"], 0)}, but {tied} models are too close to tell apart'
             else:
                 standing = f'<b>{E(leader["name"])}</b> leads at {pct(leader["rate"], 0)}, clear of every other model'
             unsolved = (f'{never} {plural(never, "task beats", "tasks beat")} every model' if never
@@ -349,9 +352,9 @@ class Site:
     <div class="sec-h"><span class="no">{nr + 1:02d}</span><div><h2>Ground rules for every task</h2>
       <p>The same rules apply to all {nt} tasks, so a model is judged on the work rather than on luck with tools.</p></div></div>
     <ul class="rules-grid">
-      <li><b>Offline and frozen.</b> No web, no tools. Every fact the model needs is in the task.</li>
+      <li><b>Offline and fixed.</b> No web, no tools. Every fact the model needs is in the task.</li>
       <li><b>Invented data only.</b> People, accounts, logs and catalogues are made up, so no real records are involved.</li>
-      <li><b>Answer checked, not vibes.</b> Automatic checks recompute totals, match IDs and look for the seeded problems.</li>
+      <li><b>Answer checked, not judged by feel.</b> Automatic checks recalculate totals, match IDs and look for the planted problems.</li>
       <li><b>Instant fails.</b> Serious mistakes, such as claiming an action was taken, fail the run however good the rest is.</li>
       <li><b>Known-good and known-bad answers.</b> Every task ships with both, to prove the checks catch what they should.</li>
       {runs_rule}
@@ -359,7 +362,7 @@ class Site:
   </section>
 </main>
 <footer class="foot"><div class="wrap"><p>{BRAND} measures how models handle the structured work a personal agent does. It is not a general intelligence ranking.</p>
-<p><a href="../">All reports</a></p></div></footer>'''
+<p><a href="../">All reports</a></p>{LICENCE_NOTICE}</div></footer>'''
         return self.shell(title=f"The roles &middot; {BRAND}",
                           description=f"The {word(nr)} roles a personal AI agent plays, and the {nt} tasks that test each one.",
                           path="roles/", root="../", body=body, skip="Skip to the roles")
@@ -472,7 +475,7 @@ class Site:
     </div>
     <dl class="scope">
       <div><dt>Model pool</dt><dd>{E(r["pool"])}</dd></div>
-      <div><dt>Harness</dt><dd>{E(r["harness"])}</dd></div>
+      <div><dt>Test setup</dt><dd>{E(r["harness"])}</dd></div>
       <div><dt>Runs</dt><dd>{runs_dd}</dd></div>
     </dl>
     <nav class="sec-nav" aria-label="In this report">{"".join(f'<a href="#{a}">{t}</a>' for a, t in nav)}</nav>
@@ -483,7 +486,7 @@ class Site:
 </main>
 <footer class="foot"><div class="wrap">
   <p>Report {number} compares one pool of models, {E(r["title"])}, on {BRAND}'s fixed tasks. It is not a general intelligence ranking, and other model pools are covered in their own reports.</p>
-  <p><a href="{root}">All reports</a> &middot; <a href="{root}roles/">The roles</a> &middot; Source and raw results: link added at launch</p>
+  <p><a href="{root}">All reports</a> &middot; <a href="{root}roles/">The roles</a></p>{LICENCE_NOTICE}
 </div></footer>'''
         return self.shell(title=f"Report {number}: {E(r['title'])} &middot; {BRAND}", description=description,
                           path=f"reports/{r['slug']}/", root=root, body=body, skip="Skip to results", og_type="article")
@@ -492,7 +495,7 @@ class Site:
     def report_ledger(s: dict) -> str:
         leader, tied, never, nt = s["models"][0], len(s["tied"]), len(s["never"]), len(s["task_ids"])
         if tied > 1:
-            close = f'<div><dt>Too close to call</dt><dd><b>{tied} models</b> are statistically tied for first</dd></div>'
+            close = f'<div><dt>Too close to call</dt><dd><b>{tied} models</b> are too close to tell apart for first place</dd></div>'
         else:
             close = '<div><dt>Clear leader</dt><dd><b>No tie</b> for first: every other model is clearly behind</dd></div>'
         if never:
@@ -561,7 +564,7 @@ class Site:
 
   <section id="table" class="sec">
     <div class="sec-h"><span class="no">06</span><div><h2>Every number</h2>
-      <p>Hard failure: a serious mistake, such as ignoring a hard limit or claiming an unsafe action was done. Valid JSON: how often the exact output format was followed. Provisional: at least one task is a scored run short.</p></div></div>
+      <p>Hard failure: a serious mistake, such as ignoring a hard limit or claiming an unsafe action was done. Valid JSON: answers in the required structured text format, with named fields. Provisional: at least one task has fewer scored runs than planned. Median time: the middle response time when sorted. Output tokens: the pieces of text in an answer.</p></div></div>
     {self.full_table(r, s)}
   </section>
 {self.method(r, s)}'''
@@ -611,7 +614,7 @@ class Site:
                         f'<td class="num">{rate(m["hard"])}</td><td class="num">{rate(m["json"])}</td>'
                         f'<td class="num">{lat}</td><td class="num">{tok}</td></tr>')
         notes = "".join(f"<li><b>{E(n)}</b> {E(t)}</li>" for n, t in r["notes"])
-        left = "".join(f"<li><b>{E(n)}</b> &mdash; {E(reason)}</li>" for n, reason in s["left_out"])
+        left = "".join(f"<li><b>{E(n)}</b> - {E(reason)}</li>" for n, reason in s["left_out"])
         side = []
         if notes:
             side.append(f"<div><h3>Models with a catch</h3><ul>{notes}</ul></div>")
@@ -627,10 +630,10 @@ class Site:
 
     def method(self, r: dict, s: dict | None) -> str:
         run_dates = "dates still to be set" if pending(r["run_dates"]) else E(r["run_dates"])
-        intro = (f"Every model got the same tasks, the same harness and {E(r['reasoning'])} reasoning. "
-                 f"Harness: {E(r['harness'])}. Models ran on {run_dates}.")
+        intro = (f"Every model got the same tasks, the same test setup and the {E(r['reasoning'])} reasoning setting. "
+                 f"Test setup: {E(r['harness'])}. Models ran on {run_dates}.")
         prov = [("Model pool", E(r["pool"]) + (f'. {len(s["models"])} ranked, {len(s["left_out"])} left out.' if s else "."))]
-        prov.append(("Harness", E(r["harness"])))
+        prov.append(("Test setup", E(r["harness"])))
         funnel = ""
         if s:
             meta, agg = s["meta"], s["aggregate"]
@@ -640,12 +643,15 @@ class Site:
                 version += f" (the roles page shows task text from v{E(str(ledger_version))})"
             prov += [("Task release", version),
                      ("Scoring policy", f'{E(str(meta["policy_id"]))} v{E(str(meta["policy_version"]))}'),
-                     ("Pass rate", "Mean of per-task pass rates, as defined by the policy"),
-                     ("Ranges and ranks", f'Paired bootstrap over tasks, {s["draws"]:,} draws, 95%. Computed for this page; not part of the '
-                                          "scoring policy. No multiple-comparison correction, so true ties may be wider."),
+                     ("Pass rate", "Average of the pass rates for each task, as defined by the scoring rules"),
+                     ("Ranges and ranks", 'Paired bootstrap over tasks: randomly draw a new set of tasks, allowing repeats. '
+                                          f'Compare models on the same set each time. Repeat {s["draws"]:,} times to estimate 95% ranges. '
+                                          'Computed for this page; not part of the '
+                                          "scoring policy. Each comparison is assessed on its own, without adjusting for the number of comparisons. "
+                                          "More models may therefore be tied than shown."),
                      ("Human quality scores", "Assigned" if s["human_scores_assigned"] else "Not assigned yet")]
             if meta.get("release_lock_fingerprint"):
-                prov.append(("Release lock", f'<code>{E(meta["release_lock_fingerprint"])}</code>'))
+                prov.append(("Release lock (fingerprint of the fixed benchmark files)", f'<code>{E(meta["release_lock_fingerprint"])}</code>'))
             nm, nt = len(s["models"]), len(s["task_ids"])
             attempted = agg.get("attempted_runs")
             product = f" ({nm} models &times; {nt} tasks &times; {s['runs']})" if attempted == nm * nt * s["runs"] else ""
@@ -704,7 +710,8 @@ class Site:
     <div class="sec-h"><span class="no">&rarr;</span><div><h2>Try one of these</h2>
       <p><a href="{E(home)}">All reports</a> &middot; <a href="{E(roles)}">The roles and their tasks</a></p></div></div>
   </section>
-</main>'''
+</main>
+<footer class="foot"><div class="wrap">{LICENCE_NOTICE}</div></footer>'''
         return self.shell(title=f"Page not found &middot; {BRAND}", description=f"This {BRAND} page does not exist.",
                           path=None, root=home, body=body, skip="Skip to links")
 

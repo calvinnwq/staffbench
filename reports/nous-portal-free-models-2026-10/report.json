@@ -5,9 +5,9 @@
  "label": "Hermes Agent × Nous Portal free models",
  "kicker": "Free models on Nous Portal, run through Hermes Agent",
  "headline": "Can a *free* Nous Portal model run your personal staff?",
- "published": "pending",
+ "published": "15 Oct 2026",
  "pool": "Every free model listed on Nous Portal that answered a test call on its run day",
- "harness": "Hermes Agent, with tools, memory and fallback routing turned off",
+ "harness": "Hermes Agent, with tools, memory and automatic switching to another model turned off",
  "run_dates": "14–15 Oct 2026",
  "reasoning": "medium",
  "models": {
@@ -21,16 +21,16 @@
  },
  "catches": {
   "Step 5 Preview": "preview",
-  "Step 3.7 Flash": "heavily rate-limited",
-  "MissingNo": "stealth model",
-  "Laguna S 2.1": "free until 31 Oct",
-  "Laguna XS 2.1": "free until 31 Oct"
+  "Step 3.7 Flash": "strict usage limits",
+  "MissingNo": "maker not named",
+  "Laguna S 2.1": "free until 31 Oct 2026",
+  "Laguna XS 2.1": "free until 31 Oct 2026"
  },
  "notes": [
-  ["MissingNo", "is a stealth model with no named maker. It may change or disappear without notice."],
+  ["MissingNo", "has no named maker. It may change or disappear without notice."],
   ["Step 5 Preview", "is a preview, so its behaviour can change under the same name."],
-  ["Step 3.7 Flash", "is heavily rate-limited. One task timed out and passed on recovery; the timed-out attempt remains infrastructure-excluded."],
-  ["Space Bunny Alpha and Ling 3.0 Flash Sante", "were on the free list on 14 Oct 2026 but did not answer any of three spaced test calls (HTTP 404) and were not in the model catalog, so they were not run."],
+  ["Step 3.7 Flash", "has strict usage limits. One task timed out once. The automatic retry passed. The timed-out try is shown but not counted."],
+  ["Space Bunny Alpha and Ling 3.0 Flash Sante", "were on the free list on 14 Oct 2026 but did not answer any of three spaced test calls (HTTP 404, meaning not found) and were not in the model catalogue, so they were not run."],
   ["Laguna S 2.1 and Laguna XS 2.1", "stop being free on 31 Oct 2026."]
  ]
 }
