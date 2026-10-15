@@ -8,38 +8,29 @@
  "published": "pending",
  "pool": "Every free model listed on Nous Portal that answered a test call on its run day",
  "harness": "Hermes Agent, with tools, memory and fallback routing turned off",
- "run_dates": "pending",
+ "run_dates": "14–15 Oct 2026",
  "reasoning": "medium",
  "models": {
-  "inclusionai/ling-3.0-flash-fin:free": "Ling 3.0 Flash Fin",
-  "inclusionai/ling-3.0-flash-sante:free": "Ling 3.0 Flash Sante",
-  "inclusionai/ling-3.1-flash": "Ling 3.1 Flash",
-  "meituan/longcat-2.0:free": "LongCat 2.0",
   "meituan/longcat-2.5-preview:free": "LongCat 2.5 Preview",
   "poolside/laguna-s-2.1:free": "Laguna S 2.1",
   "poolside/laguna-xs-2.1:free": "Laguna XS 2.1",
   "stealth/missingno": "MissingNo",
-  "stealth/space-bunny-alpha": "Space Bunny Alpha",
   "stepfun/step-3.7-flash:free": "Step 3.7 Flash",
   "stepfun/step-5-preview:free": "Step 5 Preview",
-  "upstage/solar-mini4:free": "Solar Mini4",
-  "upstage/solar-pro4:free": "Solar Pro4"
+  "upstage/solar-mini4:free": "Solar Mini4"
  },
  "catches": {
   "Step 5 Preview": "preview",
-  "Solar Pro4": "no longer free",
   "Step 3.7 Flash": "heavily rate-limited",
   "MissingNo": "stealth model",
-  "Ling 3.1 Flash": "not on free list",
   "Laguna S 2.1": "free until 31 Oct",
   "Laguna XS 2.1": "free until 31 Oct"
  },
  "notes": [
-  ["Solar Pro4", "left the free list after 29 Sep. Its results stay for comparison."],
   ["MissingNo", "is a stealth model with no named maker. It may change or disappear without notice."],
   ["Step 5 Preview", "is a preview, so its behaviour can change under the same name."],
-  ["Step 3.7 Flash", "is heavily rate-limited. 7.7 of its 8.5 rerun hours were spent waiting."],
-  ["Ling 3.1 Flash", "is priced at $0 but is not on the Portal free list."],
+  ["Step 3.7 Flash", "is heavily rate-limited. One task timed out and passed on recovery; the timed-out attempt remains infrastructure-excluded."],
+  ["Space Bunny Alpha and Ling 3.0 Flash Sante", "were on the free list on 14 Oct 2026 but did not answer any of three spaced test calls (HTTP 404) and were not in the model catalog, so they were not run."],
   ["Laguna S 2.1 and Laguna XS 2.1", "stop being free on 31 Oct 2026."]
  ]
 }
