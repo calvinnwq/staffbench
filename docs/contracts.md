@@ -40,6 +40,7 @@ The leaderboard builder keeps the existing schema with role naming:
 A report compares one pool of models on the fixed tasks.
 
 - Config: `reports/<slug>/report.json` with `slug`, `number`, `title`, `label`, `published`, `pool`, `harness`, `run_dates`, `reasoning`, `models` (model ID to display name), `catches` (display name to short tag) and `notes` (list of `[display name, sentence]`).
+- Optional `not_free_as_of`: model display name to the date of a benchmark run or free-list check that found the model no longer on the Nous Portal free list, in the same style as `published` (for example `"21 Oct 2026"`). This is an observation date, not a removal date. Every name must be in `models` and every value must be a real calendar date; invalid entries fail the site build. Omit it when no models are marked.
 - Results: `results/<slug>/leaderboard.json`, the published copy described above.
 - Raw run evidence is never committed; it lives in a private store outside the repository.
 

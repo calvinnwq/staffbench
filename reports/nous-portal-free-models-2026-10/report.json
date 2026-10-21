@@ -26,6 +26,10 @@
   "Laguna S 2.1": "free until 31 Oct 2026",
   "Laguna XS 2.1": "free until 31 Oct 2026"
  },
+ "not_free_as_of": {
+  "MissingNo": "21 Oct 2026",
+  "Step 5 Preview": "21 Oct 2026"
+ },
  "notes": [
   ["MissingNo", "has no named maker. It may change or disappear without notice."],
   ["Step 5 Preview", "is a preview, so its behaviour can change under the same name."],
