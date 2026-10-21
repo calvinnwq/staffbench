@@ -35,7 +35,7 @@ if str(HERE) not in sys.path:
 
 import charts  # noqa: E402
 import stats  # noqa: E402
-from charts import E, join_and, off_free_tag, pct, span  # noqa: E402
+from charts import E, join_and, not_free_tag, pct, span  # noqa: E402
 
 BRAND = "StaffBench"
 LICENCE_NOTICE = ('<p>Code: <a href="https://github.com/calvinnwq/staffbench/blob/main/LICENSE">MIT</a>. '
@@ -131,13 +131,13 @@ def load_reports(reports_dir: Path) -> list[dict]:
             raise BuildError(f"{path}: slug must be lowercase words joined by hyphens")
         if not isinstance(report["number"], int) or report["number"] < 1:
             raise BuildError(f"{path}: number must be a positive integer")
-        off = report.get("off_free_list", {})
-        if not isinstance(off, dict):
-            raise BuildError(f"{path}: off_free_list must be an object mapping display names to dates")
+        not_free = report.get("not_free_as_of", {})
+        if not isinstance(not_free, dict):
+            raise BuildError(f"{path}: not_free_as_of must be an object mapping display names to dates")
         months = tuple("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split())
-        for name, value in off.items():
+        for name, value in not_free.items():
             if name not in report["models"].values():
-                raise BuildError(f"{path}: off_free_list has unknown model display name {name!r}")
+                raise BuildError(f"{path}: not_free_as_of has unknown model display name {name!r}")
             match = re.fullmatch(r"([1-9]|[12][0-9]|3[01]) ([A-Z][a-z]{2}) ([0-9]{4})", value) if isinstance(value, str) else None
             try:
                 if match is None:
@@ -145,7 +145,7 @@ def load_reports(reports_dir: Path) -> list[dict]:
                 day, month, year = match.groups()
                 date(int(year), months.index(month) + 1, int(day))
             except ValueError:
-                raise BuildError(f"{path}: off_free_list[{name!r}] must be a real date like '21 Oct 2026', got {value!r}") from None
+                raise BuildError(f"{path}: not_free_as_of[{name!r}] must be a real date like '21 Oct 2026', got {value!r}") from None
         reports.append(report)
     numbers = [r["number"] for r in reports]
     if len(set(numbers)) != len(numbers):
@@ -297,7 +297,7 @@ class Site:
         question = E(plain(r["headline"])) + " " if r.get("headline") else ""
         if s:
             leader, tied, never = s["models"][0], len(s["tied"]), len(s["never"])
-            leader_name = f'<b>{E(leader["name"])}</b>' + off_free_tag(leader["name"], r.get("off_free_list", {}))
+            leader_name = f'<b>{E(leader["name"])}</b>' + not_free_tag(leader["name"], r.get("not_free_as_of", {}))
             kicker = f'{date} &middot; {len(s["models"])} models &middot; {len(s["task_ids"])} tasks &times; {s["runs"]} runs'
             if tied > 1:
                 standing = f'{leader_name} leads at {pct(leader["rate"], 0)}, but {tied} models are too close to tell apart'
@@ -433,7 +433,7 @@ class Site:
             pips.append(f'<li class="c{min(k, 3)}" title="{E(m["name"])}: {k} of {n} runs passed"><span class="pips">{dots}</span><span class="mn">{E(m["name"])}</span></li>')
         if leaders:
             m, k, n = leaders[0]
-            lead = (f'Best: <b>{E(m["name"])}</b>' + off_free_tag(m["name"], r.get("off_free_list", {}))
+            lead = (f'Best: <b>{E(m["name"])}</b>' + not_free_tag(m["name"], r.get("not_free_as_of", {}))
                     + (f" +{len(leaders) - 1} tied" if len(leaders) > 1 else "") + f" ({k}/{n})")
         else:
             lead = '<b class="nil">No model passed a single run.</b>'
@@ -521,7 +521,7 @@ class Site:
         else:
             unsolved = f'<div><dt>Nothing unsolved</dt><dd><b>All {nt} tasks</b> were passed by at least one model</dd></div>'
         return (f'<dl class="ledger"><div><dt>Best observed</dt><dd><b>{E(leader["name"])}</b>'
-                f'{off_free_tag(leader["name"], r.get("off_free_list", {}))} passed '
+                f'{not_free_tag(leader["name"], r.get("not_free_as_of", {}))} passed '
                 f'{pct(leader["rate"], 0)} of its runs in full</dd></div>{close}{unsolved}</dl>')
 
     def report_sections(self, r: dict, s: dict, root: str) -> str:
@@ -538,7 +538,7 @@ class Site:
         else:
             beat = "Every task was passed at least once by some model."
         front = s["frontier"]
-        names = [E(m["name"]) + off_free_tag(m["name"], r.get("off_free_list", {})) for m in front]
+        names = [E(m["name"]) + not_free_tag(m["name"], r.get("not_free_as_of", {})) for m in front]
         if len(front) == 1:
             frontier = f"{names[0]} is alone on it: no model is both faster and better."
         elif len(front) == 2:
@@ -554,7 +554,7 @@ class Site:
   <section id="standings" class="sec">
     <div class="sec-h"><span class="no">01</span><div><h2>The standings</h2>
       <p>A full pass means the answer passed every automatic check with no serious mistake. The bars show how far each score could move with a different draw of tasks.{lot}</p></div></div>
-    {charts.forest(s, r["catches"], r.get("off_free_list", {}))}
+    {charts.forest(s, r["catches"], r.get("not_free_as_of", {}))}
   </section>
 
   <section id="tasks" class="sec">
@@ -603,7 +603,7 @@ class Site:
                 verdict = '<p class="pverdict none">No model passed a single run.</p>'
             else:
                 leads = [x[0] for x in rows if x[2] and x[1] / x[2] == top]
-                verdict = (f'<p class="pverdict"><b>{E(leads[0])}</b>' + off_free_tag(leads[0], r.get("off_free_list", {}))
+                verdict = (f'<p class="pverdict"><b>{E(leads[0])}</b>' + not_free_tag(leads[0], r.get("not_free_as_of", {}))
                            + (f" and {len(leads) - 1} more tied" if len(leads) > 1 else "")
                            + f" &middot; {pct(top, 0)}</p>")
             tasks = "".join(f'<li><code>{E(t)}</code> {E(self.tasks[t]["title"])}</li>' for t in role["task_ids"])
@@ -628,7 +628,7 @@ class Site:
             lat = "&ndash;" if m["latency_s"] is None else f'{m["latency_s"]:.1f}s'
             tok = "&ndash;" if m["tokens"] is None else f'{m["tokens"]:,.0f}'
             rows.append(f'<tr><td class="num">{m["rank"]}</td><th scope="row">{E(m["name"])}'
-                        f'{off_free_tag(m["name"], r.get("off_free_list", {}))}</th>'
+                        f'{not_free_tag(m["name"], r.get("not_free_as_of", {}))}</th>'
                         f'<td class="num"><b>{pct(m["rate"])}</b></td><td class="num">{span(*m["ci"])}%</td>'
                         f'<td>{"tied for first" if m["band"] == 1 else "behind"}</td><td>{E(m["status"])}</td>'
                         f'<td class="num">{m["scored"]}/{total}</td><td class="num">{rate(m["auto"])}</td>'

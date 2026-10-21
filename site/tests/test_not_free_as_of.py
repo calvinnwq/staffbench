@@ -7,15 +7,15 @@ import re
 from helpers import ALPHA_SLUG, BuildCase, build
 
 REPORT = f"reports/{ALPHA_SLUG}/index.html"
-TAG = '<span class="tag tag-off">off free list since <span class="tag-date">21 Oct 2026</span></span>'
+TAG = '<span class="tag tag-off">not free as of <span class="tag-date">21 Oct 2026</span></span>'
 
 
-class OffFreeList(BuildCase):
+class NotFreeAsOf(BuildCase):
     def configured_reports(self, value):
         reports = self.reports_copy()
         path = reports / ALPHA_SLUG / "report.json"
         config = json.loads(path.read_text(encoding="utf-8"))
-        config["off_free_list"] = value
+        config["not_free_as_of"] = value
         path.write_text(json.dumps(config), encoding="utf-8")
         return reports
 
@@ -48,11 +48,11 @@ class OffFreeList(BuildCase):
         out, files = self.build()
         for rel in files:
             self.assertNotIn('class="tag tag-off"', self.read(out, rel), rel)
-            self.assertNotIn('off free list since', self.read(out, rel), rel)
+            self.assertNotIn('not free as of', self.read(out, rel), rel)
 
     def test_unknown_display_name_fails_before_writing_output(self):
         reports = self.configured_reports({"Not a model": "21 Oct 2026"})
-        with self.assertRaisesRegex(build.BuildError, r"off_free_list.*unknown.*Not a model"):
+        with self.assertRaisesRegex(build.BuildError, r"not_free_as_of.*unknown.*Not a model"):
             self.build(reports=reports)
         self.assertFalse((self.tmp / "dist").exists())
 
@@ -62,26 +62,26 @@ class OffFreeList(BuildCase):
         config = json.loads(path.read_text(encoding="utf-8"))
         for value in ("2026-10-21", "31 Feb 2026", "29 Feb 2025", "21 October 2026", "pending", 20261021, None):
             with self.subTest(value=value):
-                config["off_free_list"] = {"Quill 1": value}
+                config["not_free_as_of"] = {"Quill 1": value}
                 path.write_text(json.dumps(config), encoding="utf-8")
-                with self.assertRaisesRegex(build.BuildError, r"off_free_list.*Quill 1.*date.*21 Oct 2026"):
+                with self.assertRaisesRegex(build.BuildError, r"not_free_as_of.*Quill 1.*date.*21 Oct 2026"):
                     self.build(reports=reports)
                 self.assertFalse((self.tmp / "dist").exists())
 
     def test_non_mapping_is_rejected(self):
         reports = self.configured_reports(["Quill 1"])
-        with self.assertRaisesRegex(build.BuildError, r"off_free_list.*object"):
+        with self.assertRaisesRegex(build.BuildError, r"not_free_as_of.*object"):
             self.build(reports=reports)
 
     def test_valid_calendar_dates_and_empty_mapping_are_accepted(self):
         reports = self.configured_reports({"Quill 1": "29 Feb 2024", "Lark 2": "1 Jan 2026"})
         out, _ = self.build(reports=reports)
         report = self.read(out, REPORT)
-        self.assertIn('off free list since <span class="tag-date">29 Feb 2024</span>', report)
-        self.assertIn('off free list since <span class="tag-date">1 Jan 2026</span>', report)
+        self.assertIn('not free as of <span class="tag-date">29 Feb 2024</span>', report)
+        self.assertIn('not free as of <span class="tag-date">1 Jan 2026</span>', report)
         path = reports / ALPHA_SLUG / "report.json"
         config = json.loads(path.read_text(encoding="utf-8"))
-        config["off_free_list"] = {}
+        config["not_free_as_of"] = {}
         path.write_text(json.dumps(config), encoding="utf-8")
         out, _ = self.build("empty", reports=reports)
         self.assertNotIn('class="tag tag-off"', self.read(out, REPORT))
