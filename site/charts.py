@@ -32,7 +32,14 @@ def rate_axis_max(highs: list[float], headroom: float) -> float:
 
 # ---------- 01 forest plot ----------
 
-def forest(s: dict, catches: dict[str, str]) -> str:
+def off_free_tag(name: str, off_free_list: dict[str, str]) -> str:
+    if name not in off_free_list:
+        return ""
+    return (f' <span class="tag tag-off">off free list since '
+            f'<span class="tag-date">{E(off_free_list[name])}</span></span>')
+
+
+def forest(s: dict, catches: dict[str, str], off_free_list: dict[str, str] | None = None) -> str:
     models = s["models"]
     ax = rate_axis_max([m["ci"][1] for m in models], 0.05)
 
@@ -58,7 +65,7 @@ def forest(s: dict, catches: dict[str, str]) -> str:
             rows.append(f'''
       <li class="fr {tier}">
         <span class="fr-rank">{m["rank"]}</span>
-        <span class="fr-name"><b>{E(m["name"])}</b>{catch}{prov}</span>
+        <span class="fr-name"><b>{E(m["name"])}</b>{off_free_tag(m["name"], off_free_list or {})}{catch}{prov}</span>
         <span class="fr-track" aria-hidden="true">{grid}
           <span class="ci" style="left:{xp(lo)};width:{xp(hi - lo)}"></span>
           <span class="pt" style="left:{xp(m["rate"])}"></span>

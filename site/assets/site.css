@@ -86,6 +86,9 @@ figcaption,.legend-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px 1
 .fr-name b{font-weight:600}
 .tag{font:500 11px/1 var(--mono);color:var(--muted);padding:3px 6px;border:1px solid var(--rule);border-radius:3px;white-space:nowrap}
 .tag-prov{border-style:dashed}
+.tag-off{display:inline-block;max-width:100%;white-space:normal;line-height:1.35;background:var(--paper-2);color:var(--ink-2);vertical-align:baseline}
+.tag-off .tag-date{white-space:nowrap}
+.tbl .tag-off{display:block;margin-top:4px}
 .fr-track{position:relative;height:52px}
 .gl{position:absolute;top:0;bottom:0;width:1px;background:var(--rule-2)}
 .ci{position:absolute;top:50%;height:10px;margin-top:-5px;background:var(--c1);border-radius:5px}

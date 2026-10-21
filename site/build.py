@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -34,7 +35,7 @@ if str(HERE) not in sys.path:
 
 import charts  # noqa: E402
 import stats  # noqa: E402
-from charts import E, join_and, pct, span  # noqa: E402
+from charts import E, join_and, off_free_tag, pct, span  # noqa: E402
 
 BRAND = "StaffBench"
 LICENCE_NOTICE = ('<p>Code: <a href="https://github.com/calvinnwq/staffbench/blob/main/LICENSE">MIT</a>. '
@@ -130,6 +131,21 @@ def load_reports(reports_dir: Path) -> list[dict]:
             raise BuildError(f"{path}: slug must be lowercase words joined by hyphens")
         if not isinstance(report["number"], int) or report["number"] < 1:
             raise BuildError(f"{path}: number must be a positive integer")
+        off = report.get("off_free_list", {})
+        if not isinstance(off, dict):
+            raise BuildError(f"{path}: off_free_list must be an object mapping display names to dates")
+        months = tuple("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split())
+        for name, value in off.items():
+            if name not in report["models"].values():
+                raise BuildError(f"{path}: off_free_list has unknown model display name {name!r}")
+            match = re.fullmatch(r"([1-9]|[12][0-9]|3[01]) ([A-Z][a-z]{2}) ([0-9]{4})", value) if isinstance(value, str) else None
+            try:
+                if match is None:
+                    raise ValueError
+                day, month, year = match.groups()
+                date(int(year), months.index(month) + 1, int(day))
+            except ValueError:
+                raise BuildError(f"{path}: off_free_list[{name!r}] must be a real date like '21 Oct 2026', got {value!r}") from None
         reports.append(report)
     numbers = [r["number"] for r in reports]
     if len(set(numbers)) != len(numbers):
@@ -281,11 +297,12 @@ class Site:
         question = E(plain(r["headline"])) + " " if r.get("headline") else ""
         if s:
             leader, tied, never = s["models"][0], len(s["tied"]), len(s["never"])
+            leader_name = f'<b>{E(leader["name"])}</b>' + off_free_tag(leader["name"], r.get("off_free_list", {}))
             kicker = f'{date} &middot; {len(s["models"])} models &middot; {len(s["task_ids"])} tasks &times; {s["runs"]} runs'
             if tied > 1:
-                standing = f'<b>{E(leader["name"])}</b> leads at {pct(leader["rate"], 0)}, but {tied} models are too close to tell apart'
+                standing = f'{leader_name} leads at {pct(leader["rate"], 0)}, but {tied} models are too close to tell apart'
             else:
-                standing = f'<b>{E(leader["name"])}</b> leads at {pct(leader["rate"], 0)}, clear of every other model'
+                standing = f'{leader_name} leads at {pct(leader["rate"], 0)}, clear of every other model'
             unsolved = (f'{never} {plural(never, "task beats", "tasks beat")} every model' if never
                         else "every task was passed at least once")
             summary = f"{question}{standing}, and {unsolved}."
@@ -416,7 +433,8 @@ class Site:
             pips.append(f'<li class="c{min(k, 3)}" title="{E(m["name"])}: {k} of {n} runs passed"><span class="pips">{dots}</span><span class="mn">{E(m["name"])}</span></li>')
         if leaders:
             m, k, n = leaders[0]
-            lead = f'Best: <b>{E(m["name"])}</b>' + (f" +{len(leaders) - 1} tied" if len(leaders) > 1 else "") + f" ({k}/{n})"
+            lead = (f'Best: <b>{E(m["name"])}</b>' + off_free_tag(m["name"], r.get("off_free_list", {}))
+                    + (f" +{len(leaders) - 1} tied" if len(leaders) > 1 else "") + f" ({k}/{n})")
         else:
             lead = '<b class="nil">No model passed a single run.</b>'
         return f'''
@@ -445,7 +463,7 @@ class Site:
             runs_dd = f"{nt} tasks &times; {runs} runs per model, {E(r['reasoning'])} reasoning, {run_dates}"
             nav = ("standings", "Standings"), ("tasks", "Tasks"), ("reliability", "Reliability"), ("speed", "Speed"), \
                   ("roles", "Roles"), ("table", "Every number"), ("method", "Method")
-            ledger = self.report_ledger(s)
+            ledger = self.report_ledger(r, s)
             main = self.report_sections(r, s, root)
             description = (f"{BRAND} report {number}: {plain(r['label'])}. {nm} models on {nt} personal-agent tasks, "
                            f"{word(runs)} runs each, every answer checked automatically.")
@@ -492,7 +510,7 @@ class Site:
                           path=f"reports/{r['slug']}/", root=root, body=body, skip="Skip to results", og_type="article")
 
     @staticmethod
-    def report_ledger(s: dict) -> str:
+    def report_ledger(r: dict, s: dict) -> str:
         leader, tied, never, nt = s["models"][0], len(s["tied"]), len(s["never"]), len(s["task_ids"])
         if tied > 1:
             close = f'<div><dt>Too close to call</dt><dd><b>{tied} models</b> are too close to tell apart for first place</dd></div>'
@@ -502,7 +520,8 @@ class Site:
             unsolved = f'<div><dt>Still unsolved</dt><dd><b>{never} of {nt} tasks</b> were never passed by any model</dd></div>'
         else:
             unsolved = f'<div><dt>Nothing unsolved</dt><dd><b>All {nt} tasks</b> were passed by at least one model</dd></div>'
-        return (f'<dl class="ledger"><div><dt>Best observed</dt><dd><b>{E(leader["name"])}</b> passed '
+        return (f'<dl class="ledger"><div><dt>Best observed</dt><dd><b>{E(leader["name"])}</b>'
+                f'{off_free_tag(leader["name"], r.get("off_free_list", {}))} passed '
                 f'{pct(leader["rate"], 0)} of its runs in full</dd></div>{close}{unsolved}</dl>')
 
     def report_sections(self, r: dict, s: dict, root: str) -> str:
@@ -519,7 +538,7 @@ class Site:
         else:
             beat = "Every task was passed at least once by some model."
         front = s["frontier"]
-        names = [E(m["name"]) for m in front]
+        names = [E(m["name"]) + off_free_tag(m["name"], r.get("off_free_list", {})) for m in front]
         if len(front) == 1:
             frontier = f"{names[0]} is alone on it: no model is both faster and better."
         elif len(front) == 2:
@@ -535,7 +554,7 @@ class Site:
   <section id="standings" class="sec">
     <div class="sec-h"><span class="no">01</span><div><h2>The standings</h2>
       <p>A full pass means the answer passed every automatic check with no serious mistake. The bars show how far each score could move with a different draw of tasks.{lot}</p></div></div>
-    {charts.forest(s, r["catches"])}
+    {charts.forest(s, r["catches"], r.get("off_free_list", {}))}
   </section>
 
   <section id="tasks" class="sec">
@@ -559,7 +578,7 @@ class Site:
   <section id="roles" class="sec">
     <div class="sec-h"><span class="no">05</span><div><h2>The best model for each role</h2>
       <p>{per_role} Treat these as leads to check, not settings to apply. Every role has a full brief: what it gets, what it must return, and the traps it sets.</p></div></div>
-    <div class="profs">{self.role_cards(s, root)}</div>
+    <div class="profs">{self.role_cards(r, s, root)}</div>
   </section>
 
   <section id="table" class="sec">
@@ -569,7 +588,7 @@ class Site:
   </section>
 {self.method(r, s)}'''
 
-    def role_cards(self, s: dict, root: str) -> str:
+    def role_cards(self, r: dict, s: dict, root: str) -> str:
         cards = []
         for role in self.roles:
             rows = s["role_rows"][role["id"]]
@@ -584,7 +603,8 @@ class Site:
                 verdict = '<p class="pverdict none">No model passed a single run.</p>'
             else:
                 leads = [x[0] for x in rows if x[2] and x[1] / x[2] == top]
-                verdict = (f'<p class="pverdict"><b>{E(leads[0])}</b>' + (f" and {len(leads) - 1} more tied" if len(leads) > 1 else "")
+                verdict = (f'<p class="pverdict"><b>{E(leads[0])}</b>' + off_free_tag(leads[0], r.get("off_free_list", {}))
+                           + (f" and {len(leads) - 1} more tied" if len(leads) > 1 else "")
                            + f" &middot; {pct(top, 0)}</p>")
             tasks = "".join(f'<li><code>{E(t)}</code> {E(self.tasks[t]["title"])}</li>' for t in role["task_ids"])
             cards.append(f'''
@@ -607,7 +627,8 @@ class Site:
         for m in s["models"]:
             lat = "&ndash;" if m["latency_s"] is None else f'{m["latency_s"]:.1f}s'
             tok = "&ndash;" if m["tokens"] is None else f'{m["tokens"]:,.0f}'
-            rows.append(f'<tr><td class="num">{m["rank"]}</td><th scope="row">{E(m["name"])}</th>'
+            rows.append(f'<tr><td class="num">{m["rank"]}</td><th scope="row">{E(m["name"])}'
+                        f'{off_free_tag(m["name"], r.get("off_free_list", {}))}</th>'
                         f'<td class="num"><b>{pct(m["rate"])}</b></td><td class="num">{span(*m["ci"])}%</td>'
                         f'<td>{"tied for first" if m["band"] == 1 else "behind"}</td><td>{E(m["status"])}</td>'
                         f'<td class="num">{m["scored"]}/{total}</td><td class="num">{rate(m["auto"])}</td>'
