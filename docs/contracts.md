@@ -34,12 +34,14 @@ The leaderboard builder keeps the existing schema with role naming:
 - `profiles` becomes `roles`, `profile_id` becomes `role_id`, `profiles_covered` and `profiles_total` become `roles_covered` and `roles_total`.
 - Run records keep `run_id` and `record_path`, but a published copy under `results/` drops them and the input manifest.
 - Every other field name is unchanged.
+- `scripts/combine_leaderboard_inputs.py` keeps single-snapshot inputs unchanged by default. Opting in with `--combined-snapshot-id <new-id>` writes a union roster and manifest under that new ID. A sibling `<output-stem>.sources.json` records source snapshot IDs and input paths; provenance stays outside the frozen input and roster schemas. Conflicting model identities, benchmark identities, duplicate run IDs and duplicate record paths are refused.
 
 ## Reports
 
 A report compares one pool of models on the fixed tasks.
 
 - Config: `reports/<slug>/report.json` with `slug`, `number`, `title`, `label`, `published`, `pool`, `harness`, `run_dates`, `reasoning`, `models` (model ID to display name), `catches` (display name to short tag) and `notes` (list of `[display name, sentence]`).
+- `run_dates` may describe several run dates on the unchanged benchmark; `published` remains the original report publication date.
 - Optional `not_free_as_of`: model display name to the date of a benchmark run or free-list check that found the model no longer on the Nous Portal free list, in the same style as `published` (for example `"21 Oct 2026"`). This is an observation date, not a removal date. Every name must be in `models` and every value must be a real calendar date; invalid entries fail the site build. Omit it when no models are marked.
 - Results: `results/<slug>/leaderboard.json`, the published copy described above.
 - Raw run evidence is never committed; it lives in a private store outside the repository.
