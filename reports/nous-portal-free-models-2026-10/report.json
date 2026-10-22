@@ -8,12 +8,14 @@
  "published": "15 Oct 2026",
  "pool": "Every free model listed on Nous Portal that answered a test call on its run day",
  "harness": "Hermes Agent, with tools, memory and automatic switching to another model turned off",
- "run_dates": "14–15 Oct 2026",
+ "run_dates": "14–15 Oct and 21 Oct 2026",
  "reasoning": "medium",
  "models": {
   "meituan/longcat-2.5-preview:free": "LongCat 2.5 Preview",
   "poolside/laguna-s-2.1:free": "Laguna S 2.1",
   "poolside/laguna-xs-2.1:free": "Laguna XS 2.1",
+  "reflection/beam-1.0-501b-a23b:free": "Beam 1.0 501B",
+  "ornith/ornith-1.5-122b:free": "Ornith 1.5 122B",
   "stealth/missingno": "MissingNo",
   "stepfun/step-3.7-flash:free": "Step 3.7 Flash",
   "stepfun/step-5-preview:free": "Step 5 Preview",
@@ -35,6 +37,8 @@
   ["Step 5 Preview", "is a preview, so its behaviour can change under the same name."],
   ["Step 3.7 Flash", "has strict usage limits. One task timed out once. The automatic retry passed. The timed-out try is shown but not counted."],
   ["Space Bunny Alpha and Ling 3.0 Flash Sante", "were on the free list on 14 Oct 2026 but did not answer any of three spaced test calls (HTTP 404, meaning not found) and were not in the model catalogue, so they were not run."],
-  ["Laguna S 2.1 and Laguna XS 2.1", "stop being free on 31 Oct 2026."]
+  ["Laguna S 2.1 and Laguna XS 2.1", "stop being free on 31 Oct 2026."],
+  ["Beam 1.0 501B and Ornith 1.5 122B", "joined the free list after the first run, so they ran on 21 Oct 2026 with the same tasks, settings and test setup."],
+  ["Ornith 1.5 122B", "returned a server error (HTTP 500) on three spaced test calls on 21 Oct 2026, then answered about 15 minutes later and was run that day. One task timed out once. The automatic retry passed. The timed-out try is shown but not counted."]
  ]
 }

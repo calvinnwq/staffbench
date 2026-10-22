@@ -167,6 +167,12 @@ A launch failure is recorded and never becomes a fabricated run record.
 
 ## Building and publishing a leaderboard
 
+`scripts/combine_leaderboard_inputs.py --root <evidence-root> --inputs <manifest> ... --output <combined.json>` combines replicate and recovery manifests from one snapshot without changing the roster. Its default output remains byte-identical.
+To combine later roster snapshots on the same benchmark, explicitly add `--combined-snapshot-id <new-id>`.
+This writes the manifest and sibling `<output-stem>.roster.json` (a deterministic model union) under the new ID, plus `<output-stem>.sources.json` recording the source snapshot IDs and input paths without changing the frozen schemas.
+The union requires one provider, keeps the latest source capture timestamp, deduplicates identical models, and refuses conflicting requested/resolved identities or other model metadata, duplicate requested IDs, mismatched benchmark identities, duplicate run IDs and duplicate record paths. It never overwrites selected source evidence.
+The builder's release-lock and fingerprint checks still apply to every run. Earlier snapshots remain immutable.
+
 ```bash
 python3 scripts/build_leaderboard.py \
   --input .model-evidence/<matrix>-r1/leaderboard-input.json \
