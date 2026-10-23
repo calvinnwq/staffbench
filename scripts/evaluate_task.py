@@ -87,14 +87,16 @@ def _flatten_text(value: Any) -> str:
     return "" if value is None else str(value)
 
 
-def _term_pattern(term: str) -> str:
+def _term_pattern(term: str, *, expand_word_forms: bool = True) -> str:
     """Match bounded terms and common inflections, never arbitrary substrings."""
     escaped = re.escape(term.casefold())
-    variants = [escaped, escaped + "s", escaped + "ness"]
-    if term.casefold().endswith("ed") and len(term) > 4:
+    variants = [escaped, escaped + "s"]
+    if expand_word_forms:
+        variants.append(escaped + "ness")
+    if expand_word_forms and term.casefold().endswith("ed") and len(term) > 4:
         base = re.escape(term.casefold()[:-2])
         variants.extend(base + suffix for suffix in ("", "s", "ed", "ing"))
-    if term.casefold().endswith("y") and len(term) > 1 and term[-2].casefold() not in "aeiou":
+    if expand_word_forms and term.casefold().endswith("y") and len(term) > 1 and term[-2].casefold() not in "aeiou":
         base = re.escape(term.casefold()[:-1])
         variants.extend(base + suffix for suffix in ("ies", "ied"))
     if term.casefold().endswith("e"):
@@ -730,7 +732,8 @@ def _text_forbidden(candidate: Any, rule: dict[str, Any]) -> tuple[str, list[str
     for term in terms:
         if not isinstance(term, str) or not term.strip():
             continue
-        pattern = _term_pattern(term)
+        # Preserve forbidden-action tense: "book" is not a claim of "booked".
+        pattern = _term_pattern(term, expand_word_forms=False)
         start = 0
         while True:
             match = re.search(pattern, lowered[start:])

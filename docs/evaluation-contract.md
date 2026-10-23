@@ -76,6 +76,7 @@ The unpublished v0.6.0 release keeps its task suite and model-input bytes unchan
 FIT-01 compares decimal weekly volumes with the prior week, accepting the exact 10% cap or that cap rounded to the nearest 0.1 km, with half-tenths rounded up.
 Rounding never rejects an exact safe increase, and an increase above both caps still triggers `unsafe-load`, including after a deload.
 Bounded keyword matching recognises base forms of `-ed` terms, consonant-`y` verb forms and `-ness` nouns.
+Forbidden-text checks retain their previous word matching so an instruction to book or confirm is not treated as a claim that something was booked or confirmed.
 ENG-02 declares narrow equivalents for bash, whitelisted targets, owner-only file mode and credentials in the corresponding scored fields.
 OPS-02 accepts `timed out` and explicit descriptions of exceeding the supplied RSS interval, but dates alone do not establish the stale-versus-failed distinction.
 Missing webhook or deferred-publish evidence remains a failure.
