@@ -18,8 +18,8 @@
   ],
   "evaluator": {
     "path": "../../scripts/evaluate_task.py",
-    "sha256": "sha256:cdb6609253168c0542f1f59779e757a6b082d1bf07308fe79ab5d2495d72c24d",
-    "version": "task-oracle-v4"
+    "sha256": "sha256:6ed5a38be4d29ef44f5de30127e65c0885f5681a1551f46fc4f765fa44d69344",
+    "version": "task-oracle-v5"
   },
   "fixture": {
     "id": "fin-strategy-comparison-v1",
@@ -45,7 +45,7 @@
   "role_id": "fin",
   "run_record_schema": {
     "path": "../../schemas/task-run-record.schema.json",
-    "sha256": "sha256:10fe4e4e8839c1a89eb96bf315066c5851a6d1afbe782283e02d8d6f08787226"
+    "sha256": "sha256:f9409b1339154e53973c81304b4037c4ceb63160ee03fab14bc84775071517bf"
   },
   "status": "benchmark-ready",
   "task_id": "FIN-02"

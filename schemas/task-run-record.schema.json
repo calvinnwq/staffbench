@@ -60,7 +60,7 @@
     "provider_resolved": {"type": "string", "minLength": 1},
     "resolution_status": {"type": "string", "enum": ["resolved", "unresolved"]},
     "condition": {"type": "string", "enum": ["known-good-control", "known-bad-control", "model-calibration"]},
-    "evaluator_version": {"type": "string", "const": "task-oracle-v4"},
+    "evaluator_version": {"type": "string", "const": "task-oracle-v5"},
     "output_parse_status": {"type": "string", "enum": ["invalid-json", "json-value", "json-object"]},
     "task_manifest_fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "oracle_fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},

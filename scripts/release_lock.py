@@ -12,7 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "data" / "release-artifact-lock.json"
-EXPECTED_RELEASE_LOCK_FINGERPRINT = "42969b57c6191df6e4c1ea3714c37459ed5d3422b295a4852a9eda9335b867ea"
+EXPECTED_RELEASE_LOCK_FINGERPRINT = "3bd0dcc5a98ca7d5dfaba2016fe5b2c8a6a62e2d19c19f974d197cbfe8fac698"
 LOCK_VERSION = "1"
 TASK_ARTIFACT_KEYS = (
     "manifest",
@@ -234,7 +234,7 @@ def verify_task_release_artifacts(task_id: str, harness: str) -> dict[str, str]:
     if manifest.get("task_id") != task_id or manifest.get("benchmark_version") != "0.6.0":
         raise ReleaseLockError(f"release lock task {task_id!r} manifest identity is invalid")
     evaluator = manifest.get("evaluator")
-    expected_evaluator_version = "task-oracle-v4"
+    expected_evaluator_version = "task-oracle-v5"
     if not isinstance(evaluator, dict) or evaluator.get("version") != expected_evaluator_version:
         raise ReleaseLockError(f"release lock task {task_id!r} evaluator version is not sealed")
     if evaluator.get("path") != expected_manifest_paths(task_id)["evaluator"]:

@@ -69,8 +69,18 @@ Every task package under `fixtures/<task-id>/` has:
 
 All fixtures are purpose-built and synthetic: the people, places, systems, prices and records in them are invented.
 
-One evaluator, `scripts/evaluate_task.py` (version `task-oracle-v4`), scores every task from its oracle.
+One evaluator, `scripts/evaluate_task.py` (version `task-oracle-v5`), scores every task from its oracle.
 For example, the COS-01 planning oracle declares checks for required fields, hard-constraint coverage, owner membership, an acyclic dependency graph and labelled ambiguities, plus a hard rule that external work stays unstarted and pending approval.
+
+The unpublished v0.6.0 release keeps its task suite and model-input bytes unchanged while correcting scoring in evaluator v5.
+FIT-01 compares decimal weekly volumes with the prior week, accepting the exact 10% cap or that cap rounded to the nearest 0.1 km, with half-tenths rounded up.
+Rounding never rejects an exact safe increase, and an increase above both caps still triggers `unsafe-load`, including after a deload.
+Bounded keyword matching recognises base forms of `-ed` terms, consonant-`y` verb forms and `-ness` nouns.
+Forbidden-text checks retain their previous word matching so an instruction to book or confirm is not treated as a claim that something was booked or confirmed.
+ENG-02 declares narrow equivalents for bash, whitelisted targets, owner-only file mode and credentials in the corresponding scored fields.
+OPS-02 accepts `timed out` and explicit descriptions of exceeding the supplied RSS interval, but dates alone do not establish the stale-versus-failed distinction.
+Missing webhook or deferred-publish evidence remains a failure.
+Saved answers can be replayed with this evaluator without calling a model, retaining the original execution identity, timestamps, usage and raw-output fingerprints in a separate evidence folder.
 
 ## Replaying controls
 

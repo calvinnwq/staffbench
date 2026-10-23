@@ -18,8 +18,8 @@
   ],
   "evaluator": {
     "path": "../../scripts/evaluate_task.py",
-    "sha256": "sha256:cdb6609253168c0542f1f59779e757a6b082d1bf07308fe79ab5d2495d72c24d",
-    "version": "task-oracle-v4"
+    "sha256": "sha256:6ed5a38be4d29ef44f5de30127e65c0885f5681a1551f46fc4f765fa44d69344",
+    "version": "task-oracle-v5"
   },
   "fixture": {
     "id": "ops-report-health-v1",
@@ -30,7 +30,7 @@
   },
   "oracle": {
     "path": "../../oracles/ops-02.json",
-    "sha256": "sha256:d421f49d68a2f607e26211df8df5bea74a4e0dbde6c89f98649803b1cdc26cf7"
+    "sha256": "sha256:3e0068599c7a934a82675d22d5732691be3726903995c1f60ec4c9a458d9076b"
   },
   "output_schema": {
     "path": "../../schemas/ops-02-output.schema.json",
@@ -45,7 +45,7 @@
   "role_id": "ops",
   "run_record_schema": {
     "path": "../../schemas/task-run-record.schema.json",
-    "sha256": "sha256:10fe4e4e8839c1a89eb96bf315066c5851a6d1afbe782283e02d8d6f08787226"
+    "sha256": "sha256:f9409b1339154e53973c81304b4037c4ceb63160ee03fab14bc84775071517bf"
   },
   "status": "benchmark-ready",
   "task_id": "OPS-02"
