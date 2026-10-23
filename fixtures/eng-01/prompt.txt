@@ -10,4 +10,4 @@ Nested contract:
 - implementation is an object whose auth.py key contains the proposed Python source as a string.
 - changed_files is an array containing only the changed file paths.
 - verification_summary includes status (passed, failed, or blocked), a non-empty focused_tests array, and notes.
-- residual_risks is a non-empty string array.
+- residual_risks is a string array; use [] when no residual risks are identified.

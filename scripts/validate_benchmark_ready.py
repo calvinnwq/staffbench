@@ -185,7 +185,7 @@ def _validate_task_package(
         if manifest.get(key) != expected:
             errors.append(f"{task_id}: manifest.{key} must be {expected!r}")
     evaluator = manifest.get("evaluator")
-    expected_evaluator_version = "task-oracle-v3"
+    expected_evaluator_version = "task-oracle-v4"
     if not isinstance(evaluator, dict) or evaluator.get("version") != expected_evaluator_version:
         errors.append(f"{task_id}: manifest evaluator version must be {expected_evaluator_version}")
     required_manifest_keys = {

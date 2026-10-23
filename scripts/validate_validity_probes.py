@@ -1,4 +1,4 @@
-"""Run the v0.5.0 validity gate without invoking any model.
+"""Run the v0.6.0 validity gate without invoking any model.
 
 This gate evaluates only checked-in controls, validity probes and, optionally,
 a built leaderboard report.  It intentionally has no model-runner dependency.
@@ -117,8 +117,8 @@ def _validate_probe_catalogue(probes: Any) -> list[str]:
     errors = validate_schema_instance(probes, schema)
     if errors:
         return [f"probe schema: {error}" for error in errors]
-    if not isinstance(probes, dict) or probes.get("benchmark_version") != "0.5.0":
-        return ["validity probes must belong to benchmark version 0.5.0"]
+    if not isinstance(probes, dict) or probes.get("benchmark_version") != "0.6.0":
+        return ["validity probes must belong to benchmark version 0.6.0"]
     return []
 
 
@@ -230,7 +230,7 @@ def run_gate(report: Path | None) -> dict[str, Any]:
     report_result = validate_report(_load_json(report, "leaderboard report")) if report else None
     return {
         "gate": "zero-model-call-validity-v05",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "model_calls_issued": 0,
         "trusted_release": release,
         "controls": controls,

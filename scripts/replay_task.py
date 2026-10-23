@@ -41,8 +41,14 @@ except ImportError:  # pragma: no cover - package-style import
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_SCHEMA_PATH = ROOT / "schemas" / "task-run-record.schema.json"
-INPUT_COMPOSITION_VERSION = "prompt-plus-fixture-v1"
+INPUT_COMPOSITION_VERSION = "prompt-plus-fixture-plus-schema-v2"
 INPUT_SEPARATOR = b"\n\nSupplied synthetic request packet (JSON):\n"
+OUTPUT_CONTRACT_SEPARATOR = (
+    b"\n\nRequired output contract (JSON Schema):\n"
+    b"Return exactly one JSON object matching this schema, with no Markdown. "
+    b"Use the declared field types and exact enum/const values. "
+    b"Do not add keys where additionalProperties is false.\n"
+)
 VALID_HARNESSES = {"local-replay", "hermes-oneshot"}
 VALID_CONDITIONS = {"known-good-control", "known-bad-control", "model-calibration"}
 VALID_EXECUTION_STATUSES = {"completed", "failed", "blocked", "timed_out"}
@@ -92,16 +98,18 @@ def _resolve_manifest_path(package: Path, relative_path: Any, label: str) -> Pat
     return resolved
 
 
-def compose_model_input(prompt_path: Path, fixture_path: Path) -> bytes:
+def compose_model_input(prompt_path: Path, fixture_path: Path, output_schema_path: Path) -> bytes:
     """Return the exact UTF-8 bytes sent to a model calibration command."""
     try:
         prompt = prompt_path.read_bytes()
         fixture = fixture_path.read_bytes()
+        output_schema = output_schema_path.read_bytes()
         prompt.decode("utf-8")
         fixture.decode("utf-8")
+        output_schema.decode("utf-8")
     except (OSError, UnicodeError) as exc:
         raise InputError(f"unable to read model input ({type(exc).__name__})") from exc
-    return prompt + INPUT_SEPARATOR + fixture
+    return prompt + INPUT_SEPARATOR + fixture + OUTPUT_CONTRACT_SEPARATOR + output_schema
 
 
 def _load_task_binding(
@@ -122,7 +130,7 @@ def _load_task_binding(
     if not isinstance(manifest, dict) or manifest.get("task_id") != task_id:
         raise InputError("task manifest identity is not bound to the requested task")
     if (
-        manifest.get("benchmark_version") != "0.5.0"
+        manifest.get("benchmark_version") != "0.6.0"
         or manifest.get("status") != "benchmark-ready"
         or manifest.get("benchmark_ready") is not True
     ):
@@ -291,7 +299,8 @@ def replay(
         expected_control = ROOT / expected_release_artifact_paths(task_id)[expected_control_key]
         if candidate_path.resolve() != expected_control.resolve():
             raise InputError("control candidate path does not match its declared replay condition")
-    input_fingerprint = _sha256_reference_from_bytes(compose_model_input(prompt_path, fixture_path))
+    output_schema_path = ROOT / expected_release_artifact_paths(task_id)["output_schema"]
+    input_fingerprint = _sha256_reference_from_bytes(compose_model_input(prompt_path, fixture_path, output_schema_path))
     raw_path = raw_output_path or candidate_path
     record_started_at = started_at or _utc_timestamp()
     start = time.perf_counter()
@@ -355,7 +364,7 @@ def replay(
     record = {
         "run_id": run_id,
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "release_lock_fingerprint": binding["release_lock_fingerprint"],
         "ledger_fingerprint": binding["ledger_fingerprint"],
         "task_id": task_id,

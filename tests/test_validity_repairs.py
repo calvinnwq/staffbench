@@ -206,8 +206,8 @@ class ContractDisclosureTests(unittest.TestCase):
         ledger = _json("data/task-ledger.json")
         schema = _json("schemas/task-contract.schema.json")
 
-        self.assertEqual(ledger["benchmark_version"], "0.5.0")
-        self.assertEqual(schema["properties"]["benchmark_version"]["const"], "0.5.0")
+        self.assertEqual(ledger["benchmark_version"], "0.6.0")
+        self.assertEqual(schema["properties"]["benchmark_version"]["const"], "0.6.0")
 
 class ReportingDenominatorTests(unittest.TestCase):
     def test_report_contract_names_both_denominator_families(self) -> None:

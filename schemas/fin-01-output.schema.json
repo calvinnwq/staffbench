@@ -32,7 +32,7 @@
       "type": "array"
     },
     "constraint_gaps": {
-      "minItems": 1,
+      "minItems": 0,
       "type": "array"
     },
     "portfolio_totals": {

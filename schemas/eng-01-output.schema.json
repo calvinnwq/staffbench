@@ -11,7 +11,7 @@
       "type": "object"
     },
     "residual_risks": {
-      "minItems": 1,
+      "minItems": 0,
       "type": "array"
     },
     "verification_summary": {

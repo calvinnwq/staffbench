@@ -40,7 +40,7 @@ def _run_record(model_id: str, task_id: str, passed: bool, sequence: int) -> dic
     return {
         "run_id": f"{safe_model_id}-{task_id}-{sequence}",
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "release_lock_fingerprint": FINGERPRINT,
         "ledger_fingerprint": FINGERPRINT,
         "task_id": task_id,
@@ -52,7 +52,7 @@ def _run_record(model_id: str, task_id: str, passed: bool, sequence: int) -> dic
         "provider_resolved": "nous",
         "resolution_status": "resolved",
         "condition": "model-calibration",
-        "evaluator_version": "task-oracle-v2",
+        "evaluator_version": "task-oracle-v4",
         "output_parse_status": "json-object",
         "task_manifest_fingerprint": FINGERPRINT,
         "oracle_fingerprint": FINGERPRINT,
@@ -63,7 +63,7 @@ def _run_record(model_id: str, task_id: str, passed: bool, sequence: int) -> dic
         "prompt_fingerprint": FINGERPRINT,
         "fixture_fingerprint": FINGERPRINT,
         "input_fingerprint": FINGERPRINT,
-        "input_composition_version": "prompt-plus-fixture-v1",
+        "input_composition_version": "prompt-plus-fixture-plus-schema-v2",
         "started_at": timestamp,
         "completed_at": timestamp,
         "status": "passed" if passed else "failed",
@@ -89,7 +89,7 @@ def _run_record(model_id: str, task_id: str, passed: bool, sequence: int) -> dic
 def _base_ledger() -> dict[str, Any]:
     return {
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "roles": [
             {"id": "alpha", "task_ids": ["ALPHA-01", "ALPHA-02"]},
             {"id": "beta", "task_ids": ["BETA-01", "BETA-02", "BETA-03", "BETA-04"]},
@@ -111,7 +111,7 @@ def _base_policy() -> dict[str, Any]:
         "policy_id": "leaderboard-v2",
         "policy_version": "2.0.0",
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "scope": "benchmark-specific model leaderboard and routing aid",
         "status": "active",
         "coverage": {
@@ -147,7 +147,7 @@ def _base_roster(model_ids: tuple[str, ...] = ("model-a:free", "model-b:free")) 
     return {
         "schema_version": "model-roster-v1",
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "snapshot_id": "synthetic-roster-1",
         "provider": "nous",
         "captured_at": "2026-01-01T00:00:00Z",
@@ -179,7 +179,7 @@ def _build_synthetic_input(
     input_manifest = {
         "schema_version": "leaderboard-input-v1",
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "snapshot_id": "synthetic-input-1",
         "roster_path": "roster.json",
         "runs": [],
@@ -413,7 +413,7 @@ class LeaderboardTests(unittest.TestCase):
             _write_json(record_path, record)
             manifest = {
                 "benchmark_id": "staffbench",
-                "benchmark_version": "0.5.0",
+                "benchmark_version": "0.6.0",
                 "runs": [{"run_id": record["run_id"], "record_path": "record.json"}],
             }
 
@@ -1018,7 +1018,7 @@ def _build_trv_input(root: Path, raw_by_task: dict[str, tuple[str, dict[str, Any
     """
     ledger = {
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "roles": [{"id": "trv", "task_ids": list(TRV_TASKS)}],
         "tasks": [{"id": task_id, "role_id": "trv"} for task_id in TRV_TASKS],
     }
@@ -1028,7 +1028,7 @@ def _build_trv_input(root: Path, raw_by_task: dict[str, tuple[str, dict[str, Any
     manifest = {
         "schema_version": "leaderboard-input-v1",
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "snapshot_id": "synthetic-trv-1",
         "roster_path": "roster.json",
         "runs": [],

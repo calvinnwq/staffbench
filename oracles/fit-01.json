@@ -1,10 +1,11 @@
 {
   "checks": [
     {
-      "expected": 3,
+      "expected_fixture_path": "baseline.sessions_per_week",
       "id": "session-count",
-      "kind": "list_count",
-      "path": "weekly_schedule"
+      "kind": "positive_item_count",
+      "path": "weekly_schedule",
+      "value_key": "distance_km"
     },
     {
       "base": 30,

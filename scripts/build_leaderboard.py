@@ -41,9 +41,9 @@ except ImportError:  # pragma: no cover - package-style import
     )
 
 try:
-    from replay_task import INPUT_COMPOSITION_VERSION, INPUT_SEPARATOR
+    from replay_task import INPUT_COMPOSITION_VERSION, compose_model_input
 except ImportError:  # pragma: no cover - package-style import
-    from scripts.replay_task import INPUT_COMPOSITION_VERSION, INPUT_SEPARATOR
+    from scripts.replay_task import INPUT_COMPOSITION_VERSION, compose_model_input
 
 try:
     from leaderboard_aggregate import validate_aggregate
@@ -68,7 +68,7 @@ SUPPORTED_POLICY_SCHEMA = "leaderboard-policy-v2"
 SUPPORTED_POLICY_ID = "leaderboard-v2"
 SUPPORTED_POLICY_VERSION = "2.0.0"
 OUTPUT_SCHEMA_VERSION = "leaderboard-v2"
-EXPECTED_POLICY_FINGERPRINT = "b892631ec55a748c12dcd57e853792d9c168db7b90f876c83acb599448a91e90"
+EXPECTED_POLICY_FINGERPRINT = "432b4c73dfee8baf854185a122f83ca135e3aba39285f5917bc38c8038b0c5f1"
 # leaderboard-v2 output scoring. The parser is the conservative tolerant-json-v1
 # recovery from scripts/tolerant_output.py; it never repairs or chooses JSON.
 EXPECTED_OUTPUT_SCORING = {
@@ -278,7 +278,7 @@ def _load_ledger(
     if ledger.get("benchmark_id") != benchmark_id or ledger.get("benchmark_version") != benchmark_version:
         raise LeaderboardInputError("benchmark ledger identity does not match the leaderboard input")
     if require_frozen and _canonical_fingerprint(ledger) != EXPECTED_LEDGER_FINGERPRINT:
-        raise LeaderboardInputError("benchmark ledger does not match the sealed v0.5.0 contract")
+        raise LeaderboardInputError("benchmark ledger does not match the sealed v0.6.0 contract")
     raw_roles = ledger.get("roles")
     raw_tasks = ledger.get("tasks")
     if not isinstance(raw_roles, list) or not isinstance(raw_tasks, list):
@@ -590,7 +590,9 @@ def _trusted_task_bindings(task_ids: Iterable[str]) -> dict[str, dict[str, str]]
                 "harness_fingerprint": binding["harness_fingerprint"],
                 "prompt_fingerprint": artifacts["prompt"]["sha256"],
                 "fixture_fingerprint": artifacts["fixture"]["sha256"],
-                "input_fingerprint": _bytes_fingerprint(prompt_bytes + INPUT_SEPARATOR + fixture_bytes),
+                "input_fingerprint": _bytes_fingerprint(compose_model_input(
+                    prompt_path, fixture_path, ROOT / artifact_paths["output_schema"]
+                )),
                 "input_composition_version": INPUT_COMPOSITION_VERSION,
                 "evaluator_version": binding["evaluator_version"],
             }

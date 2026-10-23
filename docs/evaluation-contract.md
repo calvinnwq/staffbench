@@ -48,7 +48,7 @@ Human quality cannot rescue a hard failure.
 - `fixture-ready`: prompt and fixture are frozen, but evaluator validation is incomplete.
 - `benchmark-ready`: prompt, fixture, evaluator oracle and both controls have passed validation.
 
-For benchmark version `0.5.0`, all 18 tasks are `benchmark-ready`.
+For benchmark version `0.6.0`, all 18 tasks are `benchmark-ready`.
 `python3 -S scripts/validate_benchmark.py` validates the ledger contract.
 `python3 -S scripts/validate_benchmark_ready.py` validates artifact bindings and both controls for all 18 tasks: every known-good control must pass and every known-bad control must trigger every declared hard failure.
 The sealed release-artifact lock (`data/release-artifact-lock.json`) pins every package file and shared runtime script, so changing an artifact and repinning its manifest cannot quietly redefine a task.
@@ -69,7 +69,7 @@ Every task package under `fixtures/<task-id>/` has:
 
 All fixtures are purpose-built and synthetic: the people, places, systems, prices and records in them are invented.
 
-One evaluator, `scripts/evaluate_task.py` (version `task-oracle-v3`), scores every task from its oracle.
+One evaluator, `scripts/evaluate_task.py` (version `task-oracle-v4`), scores every task from its oracle.
 For example, the COS-01 planning oracle declares checks for required fields, hard-constraint coverage, owner membership, an acyclic dependency graph and labelled ambiguities, plus a hard rule that external work stays unstarted and pending approval.
 
 ## Replaying controls
@@ -94,7 +94,10 @@ A control result is evaluator evidence, not a model score.
 
 ## Model harness
 
-`scripts/run_task_model.py` runs one model on one task with the frozen prompt and fixture.
+`scripts/run_task_model.py` runs one model on one task with the frozen prompt,
+fixture and output schema, composed as `prompt-plus-fixture-plus-schema-v2`.
+The schema is appended verbatim with instructions to obey field types,
+enum/const values and `additionalProperties: false`; no oracle is exposed.
 By default it runs `scripts/hermes_no_tools.py`, a narrow Hermes Agent adapter that:
 
 - reads provider credentials from one Hermes home you supply with `--hermes-home` or `STAFFBENCH_HERMES_HOME`;
@@ -239,6 +242,20 @@ If either cannot be resolved, the record uses `unresolved` and a `blocked` statu
 Retries use new run IDs, so failed attempts stay immutable and visible.
 
 ## Reproducibility rules
+
+v0.6.0 corrects FIT-01's session count (seven day entries, positive-distance
+running days counted against the fixture baseline), separates COS-01 label
+errors from constraint retention, and recognises bounded keyword inflections.
+Required arrays explicitly permitting no findings use `minItems: 0`: FIN-01
+`constraint_gaps`, RES-01 `conflicts`, ENG-01 `residual_risks`, and DES-02 / PRD-02
+`open_questions`. They must still be present and have the declared array type;
+other coverage requirements and all substantive checks remain strict.
+
+Report 01's v0.5.0 outputs are immutable. The output schema accepts that historical
+version for display only; new input manifests, rosters, run records, controls and
+release verification require v0.6.0. Offline re-scoring of old raw answers measures
+evaluator repairs only and cannot measure the effect of showing the new contract.
+Such diagnostics are not publishable as new v0.6.0 model results.
 
 - Use the same fixture and evaluator versions for every condition.
 - Keep live browsing disabled for scored tasks.

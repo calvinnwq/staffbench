@@ -1,7 +1,7 @@
 {
   "allowed_tools": [],
   "benchmark_ready": true,
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "controls": [
     {
       "condition": "known-good-control",
@@ -18,8 +18,8 @@
   ],
   "evaluator": {
     "path": "../../scripts/evaluate_task.py",
-    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
-    "version": "task-oracle-v3"
+    "sha256": "sha256:cdb6609253168c0542f1f59779e757a6b082d1bf07308fe79ab5d2495d72c24d",
+    "version": "task-oracle-v4"
   },
   "fixture": {
     "id": "eng-authentication-fix-v1",
@@ -34,18 +34,18 @@
   },
   "output_schema": {
     "path": "../../schemas/eng-01-output.schema.json",
-    "sha256": "sha256:09165476231e34dfdd3ecbf221c992b33883027304702d84fed04febb2c3936f"
+    "sha256": "sha256:eaf53ea54f31de73f080f02758813df9cf1711d18cd4843358b93e9f12d73592"
   },
   "prompt": {
     "path": "prompt.txt",
-    "sha256": "sha256:7388ef33dacbaf62ef22b347523f0f55fe8cd52e03c069b92784e9ca72b484aa",
+    "sha256": "sha256:d07abf3ddd273a0766ec4ab22cdec1074172aefd8ef705dc96ed39f82af8c9fb",
     "status": "frozen"
   },
   "release_gate": "../../scripts/validate_benchmark_ready.py",
   "role_id": "eng",
   "run_record_schema": {
     "path": "../../schemas/task-run-record.schema.json",
-    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+    "sha256": "sha256:10fe4e4e8839c1a89eb96bf315066c5851a6d1afbe782283e02d8d6f08787226"
   },
   "status": "benchmark-ready",
   "task_id": "ENG-01"

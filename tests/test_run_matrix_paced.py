@@ -62,7 +62,7 @@ def _roster() -> dict:
     return {
         "schema_version": "model-roster-v1",
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "snapshot_id": "test-roster",
         "provider": "test-provider",
         "captured_at": "2026-10-14T00:00:00Z",

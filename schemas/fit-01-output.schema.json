@@ -24,7 +24,17 @@
       "type": "array"
     },
     "weekly_schedule": {
-      "minItems": 1,
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["distance_km"],
+        "properties": {
+          "day": {"type": "string"},
+          "distance_km": {"type": "number", "minimum": 0},
+          "session": {"type": "string"}
+        }
+      },
       "type": "array"
     }
   },

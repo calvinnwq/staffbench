@@ -380,7 +380,7 @@ def _validate_cell_record(record: Any, cell: dict[str, str]) -> None:
     expected = {
         "run_id": cell["run_id"],
         "benchmark_id": "staffbench",
-        "benchmark_version": "0.5.0",
+        "benchmark_version": "0.6.0",
         "task_id": cell["task_id"],
         "role_id": cell["role_id"],
         "harness": "hermes-oneshot",
