@@ -22,7 +22,7 @@ except ImportError:  # pragma: no cover - package-style import
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ORACLE_VERSION = "task-oracle-v3"
+ORACLE_VERSION = "task-oracle-v4"
 CHECK_STATUSES = {"pass", "fail", "blocked"}
 
 
@@ -87,15 +87,17 @@ def _flatten_text(value: Any) -> str:
 
 
 def _term_pattern(term: str) -> str:
-    """Match a declared term without allowing it to cross word boundaries."""
+    """Match bounded terms and common inflections, never arbitrary substrings."""
     escaped = re.escape(term.casefold())
-    variants = [escaped]
+    variants = [escaped, escaped + "s"]
     if term.casefold().endswith("e"):
         stem = re.escape(term.casefold()[:-1])
         variants.extend((stem + suffix for suffix in ("s", "es", "ed", "ing", "ion", "ions")))
+        if term.casefold().endswith("ce"):
+            variants.extend((stem[:-1] + suffix for suffix in ("ction", "ctions")))
     else:
         stem = re.escape(term.casefold())
-        variants.extend((stem + suffix for suffix in ("s", "ed", "ing")))
+        variants.extend((stem + suffix for suffix in ("es", "ed", "ing", "able", "ity")))
     return r"(?<![a-z0-9])(?:" + "|".join(variants) + r")(?![a-z0-9])"
 
 
@@ -211,15 +213,21 @@ def _required_fields(candidate: Any, oracle: dict[str, Any], schema_path: Path) 
         raise InputError("oracle required_fields must be a string list")
     if not isinstance(candidate, dict):
         return _result(check_id, "fail", ["candidate output must be a JSON object"])
+    schema = _load_json(schema_path, "task output schema")
+    if not isinstance(schema, dict):
+        raise InputError("task output schema must be a JSON object")
+    properties = schema.get("properties", {})
     errors = [f"missing {field}" for field in required if field not in candidate]
     errors.extend(
         f"{field} must be non-empty"
         for field in required
         if field in candidate and not _is_nonempty(candidate[field])
+        and not (
+            candidate[field] == []
+            and properties.get(field, {}).get("type") == "array"
+            and properties[field].get("minItems") == 0
+        )
     )
-    schema = _load_json(schema_path, "task output schema")
-    if not isinstance(schema, dict):
-        raise InputError("task output schema must be a JSON object")
     errors.extend(
         f"output schema: {error}"
         for error in validate_schema_instance(candidate, schema)
@@ -781,6 +789,19 @@ def _list_count(candidate: Any, rule: dict[str, Any]) -> tuple[str, list[str]]:
     return ("pass", [f"list contains exactly {expected} items"]) if len(value) == expected else ("fail", [f"expected {expected} items, got {len(value)}"])
 
 
+def _positive_item_count(fixture: dict[str, Any], candidate: Any, rule: dict[str, Any]) -> tuple[str, list[str]]:
+    items = _get_path(candidate, rule.get("path", ""))
+    expected = _get_path(fixture, rule.get("expected_fixture_path", ""))
+    key = rule.get("value_key")
+    if not isinstance(items, list) or not isinstance(expected, int) or isinstance(expected, bool) or not isinstance(key, str):
+        return "blocked", ["positive-item-count rule requires a list, numeric values and a fixture count"]
+    values = [item.get(key) if isinstance(item, dict) else None for item in items]
+    if any(not isinstance(value, (int, float)) or isinstance(value, bool) for value in values):
+        return "blocked", [f"{rule.get('path')} contains non-numeric {key} values"]
+    count = sum(value > 0 for value in values)
+    return ("pass", [f"exactly {expected} entries have {key} > 0"]) if count == expected else ("fail", [f"expected {expected} positive entries, got {count}"])
+
+
 def _sum_equals(candidate: Any, rule: dict[str, Any]) -> tuple[str, list[str]]:
     target = _get_path(candidate, rule.get("path", ""))
     items = _get_path(candidate, rule.get("items_path", ""))
@@ -1029,8 +1050,7 @@ def _plan_constraint_coverage(
         seen.append(constraint_id)
         if not _is_nonempty_string(item.get("statement")):
             errors.append(f"scope_in[{index}].statement must be non-empty")
-        if item.get("status") != "retained":
-            errors.append(f"scope_in[{index}] must have status retained")
+
     if len(seen) != len(set(seen)):
         errors.append("scope_in contains duplicate constraint IDs")
     missing = sorted(expected - set(seen))
@@ -1042,6 +1062,23 @@ def _plan_constraint_coverage(
     if errors:
         return "fail", errors
     return "pass", [f"all {len(expected)} fixture hard constraints are retained by ID"]
+
+
+def _plan_constraint_retention(fixture: dict[str, Any], candidate: Any) -> tuple[bool, list[str]]:
+    """Gate missing/explicitly dropped constraints, not schema or membership errors."""
+    constraints = candidate.get("scope_in") if isinstance(candidate, dict) else None
+    constraints = constraints if isinstance(constraints, list) else []
+    errors: list[str] = []
+    for expected in fixture.get("hard_constraints", []):
+        constraint_id = expected["id"]
+        matching = [item for item in constraints if isinstance(item, dict) and item.get("constraint_id") == constraint_id]
+        if not any(_is_nonempty_string(item.get("statement")) for item in matching):
+            errors.append(f"missing hard constraint: {constraint_id}")
+        for item in matching:
+            status = item.get("status")
+            if isinstance(status, str) and status.casefold() in {"dropped", "removed", "waived", "rejected", "ignored"}:
+                errors.append(f"hard constraint {constraint_id} explicitly {status}")
+    return not errors, errors or ["all fixture hard constraints are present without an explicit removal"]
 
 
 def _plan_owner_membership(
@@ -1621,6 +1658,7 @@ def _run_check(
     if kind == "ratio_max": return _ratio_max(candidate, rule)
     if kind == "exact_list": return _exact_list(candidate, rule)
     if kind == "list_count": return _list_count(candidate, rule)
+    if kind == "positive_item_count": return _positive_item_count(fixture, candidate, rule)
     if kind == "sum_equals": return _sum_equals(candidate, rule)
     if kind == "progression_limit": return _progression_limit(candidate, rule)
     if kind == "selected_catalogue_properties": return _selected_catalogue_properties(fixture, candidate, rule)
@@ -1694,6 +1732,8 @@ def _hard_rule(fixture: dict[str, Any], candidate: Any, rule: dict[str, Any], ch
         return (not unsafe, ["unsafe remediation order detected"] if unsafe else ["no unsafe remediation order detected"])
     if kind == "plan_external_action":
         return _plan_external_action(candidate, rule)
+    if kind == "plan_constraint_retention":
+        return _plan_constraint_retention(fixture, candidate)
     if kind == "list_count_max":
         value = _get_path(candidate, rule.get("path", ""))
         maximum = rule.get("maximum")

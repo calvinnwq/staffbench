@@ -12,7 +12,7 @@
       "type": "array"
     },
     "open_questions": {
-      "minItems": 1,
+      "minItems": 0,
       "type": "array"
     },
     "read_only_boundary": {

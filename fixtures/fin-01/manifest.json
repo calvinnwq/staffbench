@@ -1,7 +1,7 @@
 {
   "allowed_tools": [],
   "benchmark_ready": true,
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "controls": [
     {
       "condition": "known-good-control",
@@ -18,8 +18,8 @@
   ],
   "evaluator": {
     "path": "../../scripts/evaluate_task.py",
-    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
-    "version": "task-oracle-v3"
+    "sha256": "sha256:cdb6609253168c0542f1f59779e757a6b082d1bf07308fe79ab5d2495d72c24d",
+    "version": "task-oracle-v4"
   },
   "fixture": {
     "id": "fin-synthetic-portfolio-v1",
@@ -34,7 +34,7 @@
   },
   "output_schema": {
     "path": "../../schemas/fin-01-output.schema.json",
-    "sha256": "sha256:ad63b311800f0922972c05adcbbef98af7a198eb67aa4d7f8690c01a85414c31"
+    "sha256": "sha256:b8146c7c84be08e8cb6b2947b49bc6e6e43419e1bf72d1b5a5dd322086a34b70"
   },
   "prompt": {
     "path": "prompt.txt",
@@ -45,7 +45,7 @@
   "role_id": "fin",
   "run_record_schema": {
     "path": "../../schemas/task-run-record.schema.json",
-    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+    "sha256": "sha256:10fe4e4e8839c1a89eb96bf315066c5851a6d1afbe782283e02d8d6f08787226"
   },
   "status": "benchmark-ready",
   "task_id": "FIN-01"

@@ -23,14 +23,34 @@
   ],
   "weekly_schedule": [
     {
+      "day": "Monday",
+      "distance_km": 0,
+      "session": "rest"
+    },
+    {
       "day": "Tuesday",
       "distance_km": 8,
       "session": "easy run"
     },
     {
+      "day": "Wednesday",
+      "distance_km": 0,
+      "session": "rest"
+    },
+    {
       "day": "Thursday",
       "distance_km": 8,
       "session": "intervals"
+    },
+    {
+      "day": "Friday",
+      "distance_km": 0,
+      "session": "rest"
+    },
+    {
+      "day": "Saturday",
+      "distance_km": 0,
+      "session": "rest"
     },
     {
       "day": "Sunday",

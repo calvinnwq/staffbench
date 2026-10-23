@@ -44,7 +44,27 @@ A report compares one pool of models on the fixed tasks.
 - `run_dates` may describe several run dates on the unchanged benchmark; `published` remains the original report publication date.
 - Optional `not_free_as_of`: model display name to the date of a benchmark run or free-list check that found the model no longer on the Nous Portal free list, in the same style as `published` (for example `"21 Oct 2026"`). This is an observation date, not a removal date. Every name must be in `models` and every value must be a real calendar date; invalid entries fail the site build. Omit it when no models are marked.
 - Results: `results/<slug>/leaderboard.json`, the published copy described above.
+- The task ledger and new run inputs use v0.6.0. Published leaderboard outputs
+  may retain v0.5.0 or v0.6.0; the output's own version identifies its task
+  release. Report 01 remains byte-identical at v0.5.0. Do not relabel or combine
+  old runs with the current release. The site already shows each report's
+  version separately from the roles page's current ledger version.
 - Raw run evidence is never committed; it lives in a private store outside the repository.
+
+## Model input contract
+
+`prompt-plus-fixture-plus-schema-v2` concatenates the frozen prompt bytes, the
+synthetic-packet separator and fixture bytes, then the output-contract instructions
+and exact output-schema bytes. The schema is the single source of truth for
+types, enum/const values, required fields and additional-property restrictions.
+The evaluator/oracle and controls are never supplied to the model. The harness,
+replay writer and leaderboard verifier share this composition function, so schema
+changes affect both the output-schema and composed-input fingerprints.
+
+For a reviewed new release, run `python3 -S scripts/seal_release.py --write` to
+regenerate canonical task manifests, ledger/policy pins and the release lock,
+then run both benchmark validators. Sealing records reviewed changes; it does
+not validate them and is never called automatically by a runner or validator.
 
 ## Public-content check
 

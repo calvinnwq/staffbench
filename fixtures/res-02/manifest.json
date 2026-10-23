@@ -1,7 +1,7 @@
 {
   "allowed_tools": [],
   "benchmark_ready": true,
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "controls": [
     {
       "condition": "known-good-control",
@@ -18,8 +18,8 @@
   ],
   "evaluator": {
     "path": "../../scripts/evaluate_task.py",
-    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
-    "version": "task-oracle-v3"
+    "sha256": "sha256:cdb6609253168c0542f1f59779e757a6b082d1bf07308fe79ab5d2495d72c24d",
+    "version": "task-oracle-v4"
   },
   "fixture": {
     "id": "res-build-comparison-v1",
@@ -45,7 +45,7 @@
   "role_id": "res",
   "run_record_schema": {
     "path": "../../schemas/task-run-record.schema.json",
-    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+    "sha256": "sha256:10fe4e4e8839c1a89eb96bf315066c5851a6d1afbe782283e02d8d6f08787226"
   },
   "status": "benchmark-ready",
   "task_id": "RES-02"

@@ -18,7 +18,7 @@ class CombineInputsTests(unittest.TestCase):
         self.inputs = []
         roster = {
             'schema_version': 'model-roster-v1', 'benchmark_id': 'staffbench',
-            'benchmark_version': '0.5.0', 'snapshot_id': 'test-snapshot',
+            'benchmark_version': '0.6.0', 'snapshot_id': 'test-snapshot',
             'provider': 'test-provider', 'captured_at': '2026-01-01T00:00:00Z',
             'models': [{'model_id': 'test/model', 'requested_model_id': 'test/model',
                         'resolved_model_id': 'test/model', 'provider_requested': 'test-provider',
@@ -34,7 +34,7 @@ class CombineInputsTests(unittest.TestCase):
                 path.write_text('{}')
                 runs.append({'run_id': run_id, 'record_path': path.relative_to(self.root).as_posix()})
             manifest = {'schema_version': 'leaderboard-input-v1', 'benchmark_id': 'staffbench',
-                        'benchmark_version': '0.5.0', 'snapshot_id': 'test-snapshot',
+                        'benchmark_version': '0.6.0', 'snapshot_id': 'test-snapshot',
                         'roster_path': f'{replicate}/roster.json', 'runs': runs}
             path = directory / 'leaderboard-input.json'
             path.write_text(json.dumps(manifest))
@@ -64,7 +64,7 @@ class CombineInputsTests(unittest.TestCase):
         args = ['--combined-snapshot-id', 'combined-snapshot']
         result = self.run_combine(extra_args=args)
         self.assertEqual(result.returncode, 0, result.stderr)
-        combined, union = _load_input(self.root / 'combined.json', self.root, 'staffbench', '0.5.0')
+        combined, union = _load_input(self.root / 'combined.json', self.root, 'staffbench', '0.6.0')
         self.assertEqual(combined['snapshot_id'], 'combined-snapshot')
         self.assertEqual(union['snapshot_id'], 'combined-snapshot')
         self.assertEqual(union['captured_at'], '2026-01-02T00:00:00Z')
@@ -102,7 +102,7 @@ class CombineInputsTests(unittest.TestCase):
         self.assertEqual(manifest['roster_path'], 'r1/roster.json')
         self.assertEqual(manifest['snapshot_id'], 'test-snapshot')
         expected = {'schema_version': 'leaderboard-input-v1', 'benchmark_id': 'staffbench',
-                    'benchmark_version': '0.5.0', 'snapshot_id': 'test-snapshot',
+                    'benchmark_version': '0.6.0', 'snapshot_id': 'test-snapshot',
                     'roster_path': 'r1/roster.json', 'runs': [
                         {'run_id': run_id, 'record_path': f'{directory}/{run_id}.json'}
                         for run_id, directory in [('run-a', 'r1'), ('run-b', 'r1'),

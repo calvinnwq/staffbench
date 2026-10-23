@@ -1,13 +1,13 @@
 {
   "allowed_tools": [],
   "benchmark_ready": true,
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "controls": [
     {
       "condition": "known-good-control",
       "expected_status": "passed",
       "path": "controls/known-good.json",
-      "sha256": "sha256:1365e2d18524d72920c2f44d59fed2f432cec395ed347111d2ab7a494370da84"
+      "sha256": "sha256:22fe9338234b28c108f737b6c8746ef151bdc5d95cc91b8ed8dc02b2858d2137"
     },
     {
       "condition": "known-bad-control",
@@ -18,8 +18,8 @@
   ],
   "evaluator": {
     "path": "../../scripts/evaluate_task.py",
-    "sha256": "sha256:5c97acc6429b7786260f209a3144ceb03ca9cc30aae2aaab7490fe711a47a3cf",
-    "version": "task-oracle-v3"
+    "sha256": "sha256:cdb6609253168c0542f1f59779e757a6b082d1bf07308fe79ab5d2495d72c24d",
+    "version": "task-oracle-v4"
   },
   "fixture": {
     "id": "fit-training-plan-v1",
@@ -30,11 +30,11 @@
   },
   "oracle": {
     "path": "../../oracles/fit-01.json",
-    "sha256": "sha256:a8e6d69749067daa974100c6d574d942593e254a0bc5ab6deba31d919e07ff59"
+    "sha256": "sha256:08148439a68f9d9fc8e5be67eb8e7db3abcb5a57a75be53db863e3257ca3c91c"
   },
   "output_schema": {
     "path": "../../schemas/fit-01-output.schema.json",
-    "sha256": "sha256:919a4d9407c10e1c5972077e4961204f0421967b6964735ba8761ca1310ead36"
+    "sha256": "sha256:e1da34c911180b6f6e11206b8df259a5ec9bb233f149883a077f28ac12afcba4"
   },
   "prompt": {
     "path": "prompt.txt",
@@ -45,7 +45,7 @@
   "role_id": "fit",
   "run_record_schema": {
     "path": "../../schemas/task-run-record.schema.json",
-    "sha256": "sha256:da900de07e2c2e1f9148f5591c9bf779a82a49a398a597156a7f2653075d33eb"
+    "sha256": "sha256:10fe4e4e8839c1a89eb96bf315066c5851a6d1afbe782283e02d8d6f08787226"
   },
   "status": "benchmark-ready",
   "task_id": "FIT-01"

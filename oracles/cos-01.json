@@ -21,9 +21,8 @@
   "fixture_version": "1.0.0",
   "hard_rules": [
     {
-      "check_id": "constraint-coverage",
       "id": "dropped-hard-constraint",
-      "kind": "check_ref"
+      "kind": "plan_constraint_retention"
     },
     {
       "check_id": "owner-membership",

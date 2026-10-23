@@ -26,7 +26,7 @@
     "$id": {"type": "string"},
     "schema_version": {"type": "string", "const": "leaderboard-v2"},
     "benchmark_id": {"type": "string", "const": "staffbench"},
-    "benchmark_version": {"type": "string", "const": "0.5.0"},
+    "benchmark_version": {"type": "string", "enum": ["0.5.0", "0.6.0"]},
     "policy_id": {"type": "string", "const": "leaderboard-v2"},
     "policy_version": {"type": "string", "const": "2.0.0"},
     "input_snapshot_id": {"type": "string", "minLength": 1},

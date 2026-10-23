@@ -4,7 +4,7 @@ The canonical task data lives in [`data/task-ledger.json`](../data/task-ledger.j
 This page is the human-readable index of the 18 tasks: two per role, nine roles.
 The Primary evaluation column is an editorial summary; the measurement contract in the JSON ledger is authoritative.
 
-All 18 tasks are `benchmark-ready` in benchmark version `0.5.0`.
+All 18 tasks are `benchmark-ready` in benchmark version `0.6.0`.
 Every task is a purpose-built synthetic fixture: invented people, places, systems and numbers.
 Each task has a frozen prompt, fixture, evaluator oracle, output schema, known-good control and known-bad control under `fixtures/`, `oracles/` and `schemas/`.
 
@@ -52,3 +52,18 @@ Before a task is `benchmark-ready`, the release gate verifies that:
 - failure and blocked states remain visible
 
 Run `python3 -S scripts/validate_benchmark_ready.py` to apply this checklist to every task package.
+
+## v0.6.0 contract repairs
+
+Every model input now includes the task's exact output schema, not just its
+prompt and fixture. FIT-01 keeps seven day objects and counts only positive
+running distances against the baseline session count. COS-01 status labels
+remain strict schema checks, not evidence of a dropped constraint.
+
+Explicit empty arrays are valid for FIN-01 constraint gaps, RES-01 conflicts,
+ENG-01 residual risks, and DES-02 / PRD-02 open questions. Other mandatory
+coverage lists stay non-empty. The shared keyword matcher recognises bounded
+common inflections such as liquidity, reduction and focusable.
+
+Report 01 remains the published v0.5.0 comparison. Scores from the new release
+are a separate lineage; replaying old answers is diagnostic, not a new model run.

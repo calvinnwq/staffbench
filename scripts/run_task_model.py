@@ -54,9 +54,9 @@ def _reject_nonfinite_json_constant(value: str) -> None:
     raise ValueError(f"non-finite JSON number {value!r} is not supported")
 
 
-def build_model_prompt(prompt_path: Path, fixture_path: Path) -> str:
-    """Keep both frozen inputs byte-for-byte intact while composing the request."""
-    return compose_model_input(prompt_path, fixture_path).decode("utf-8")
+def build_model_prompt(prompt_path: Path, fixture_path: Path, output_schema_path: Path) -> str:
+    """Keep the frozen prompt, fixture and output schema byte-for-byte intact."""
+    return compose_model_input(prompt_path, fixture_path, output_schema_path).decode("utf-8")
 
 
 def _validate_run_id(run_id: str) -> None:
@@ -277,7 +277,8 @@ def run_model(
     model_input_path = evidence_dir / "model-input.txt"
     git_state_path = evidence_dir / "git-state.json"
 
-    model_input = compose_model_input(prompt_path, fixture_path)
+    output_schema_path = ROOT / "schemas" / f"{task_id.lower()}-output.schema.json"
+    model_input = compose_model_input(prompt_path, fixture_path, output_schema_path)
     model_input_path.write_bytes(model_input)
     git_state = _capture_git_state()
     _write_json(git_state_path, git_state)

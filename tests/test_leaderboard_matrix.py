@@ -130,7 +130,7 @@ class LeaderboardMatrixTests(unittest.TestCase):
 
         manifest = build_input_manifest(
             benchmark_id="staffbench",
-            benchmark_version="0.5.0",
+            benchmark_version="0.6.0",
             snapshot_id="nous-snapshot-1",
             roster_path="roster.json",
             completed_cells=[

@@ -12,7 +12,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "data" / "release-artifact-lock.json"
-EXPECTED_RELEASE_LOCK_FINGERPRINT = "a0bfc8b0615dfc6e6a9de0ab983767f422cf807f1d91d4c7c076c21a343463b0"
+EXPECTED_RELEASE_LOCK_FINGERPRINT = "42969b57c6191df6e4c1ea3714c37459ed5d3422b295a4852a9eda9335b867ea"
 LOCK_VERSION = "1"
 TASK_ARTIFACT_KEYS = (
     "manifest",
@@ -161,7 +161,7 @@ def load_release_lock() -> dict[str, Any]:
         raise ReleaseLockError("release lock schema pointer is invalid")
     if lock.get("benchmark_id") != "staffbench":
         raise ReleaseLockError("release lock benchmark identity is invalid")
-    if lock.get("benchmark_version") != "0.5.0":
+    if lock.get("benchmark_version") != "0.6.0":
         raise ReleaseLockError("release lock benchmark version is invalid")
     if lock.get("lock_version") != LOCK_VERSION:
         raise ReleaseLockError("release lock version is invalid")
@@ -231,10 +231,10 @@ def verify_task_release_artifacts(task_id: str, harness: str) -> dict[str, str]:
     manifest = _load_json(ROOT / expected_paths["manifest"])
     if not isinstance(manifest, dict):
         raise ReleaseLockError(f"release lock task {task_id!r} manifest must be an object")
-    if manifest.get("task_id") != task_id or manifest.get("benchmark_version") != "0.5.0":
+    if manifest.get("task_id") != task_id or manifest.get("benchmark_version") != "0.6.0":
         raise ReleaseLockError(f"release lock task {task_id!r} manifest identity is invalid")
     evaluator = manifest.get("evaluator")
-    expected_evaluator_version = "task-oracle-v3"
+    expected_evaluator_version = "task-oracle-v4"
     if not isinstance(evaluator, dict) or evaluator.get("version") != expected_evaluator_version:
         raise ReleaseLockError(f"release lock task {task_id!r} evaluator version is not sealed")
     if evaluator.get("path") != expected_manifest_paths(task_id)["evaluator"]:

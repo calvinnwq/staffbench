@@ -2,7 +2,7 @@
   "$schema": "../schemas/task-contract.schema.json",
   "schema_version": "0.1.0",
   "benchmark_id": "staffbench",
-  "benchmark_version": "0.5.0",
+  "benchmark_version": "0.6.0",
   "status": "benchmark-ready",
   "evaluation_policy": {
     "execution_boundary": "offline_replay",
@@ -1200,8 +1200,8 @@
           {
             "id": "session-count",
             "type": "constraint_satisfaction",
-            "description": "Compare scheduled sessions with the fixture availability.",
-            "pass_condition": "Every week uses no more sessions than are available and includes the required recovery days."
+            "description": "Count positive-distance running days in a seven-day schedule against the fixture baseline.",
+            "pass_condition": "The seven day objects contain exactly baseline.sessions_per_week positive-distance runs; zero-distance days are recovery days."
           },
           {
             "id": "progression-logic",
