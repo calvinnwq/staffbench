@@ -12,6 +12,18 @@
     {
       "id": "stale-versus-failed",
       "kind": "text_contains",
+      "equivalent_terms": {
+        "timeout": ["timed out"],
+        "stale": [
+          "exceeding its 24-hour expected interval",
+          "not been updated within its expected 24-hour interval",
+          "last success exceeds expected 24-hour interval",
+          "exceeding its 24h expected interval",
+          "not refreshed within its 24h expected interval",
+          "older than its expected 24-hour interval",
+          "not refreshed within its 24-hour interval"
+        ]
+      },
       "paths": [
         "root_cause"
       ],

@@ -52,7 +52,7 @@ def _run_record(model_id: str, task_id: str, passed: bool, sequence: int) -> dic
         "provider_resolved": "nous",
         "resolution_status": "resolved",
         "condition": "model-calibration",
-        "evaluator_version": "task-oracle-v4",
+        "evaluator_version": "task-oracle-v5",
         "output_parse_status": "json-object",
         "task_manifest_fingerprint": FINGERPRINT,
         "oracle_fingerprint": FINGERPRINT,

@@ -11,6 +11,14 @@
       "kind": "defect_consistency",
       "remediation_id_key": "finding_id",
       "remediation_path": "remediation",
+      "summary_equivalent_terms": {
+        "shell": ["bash"]
+      },
+      "remediation_equivalent_terms": {
+        "allowlisted": ["whitelisted"],
+        "permissions": ["file mode to 0600"],
+        "secret": ["credentials"]
+      },
       "severity_path": "severity"
     }
   ],

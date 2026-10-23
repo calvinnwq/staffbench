@@ -12,6 +12,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +23,7 @@ except ImportError:  # pragma: no cover - package-style import
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ORACLE_VERSION = "task-oracle-v4"
+ORACLE_VERSION = "task-oracle-v5"
 CHECK_STATUSES = {"pass", "fail", "blocked"}
 
 
@@ -89,7 +90,13 @@ def _flatten_text(value: Any) -> str:
 def _term_pattern(term: str) -> str:
     """Match bounded terms and common inflections, never arbitrary substrings."""
     escaped = re.escape(term.casefold())
-    variants = [escaped, escaped + "s"]
+    variants = [escaped, escaped + "s", escaped + "ness"]
+    if term.casefold().endswith("ed") and len(term) > 4:
+        base = re.escape(term.casefold()[:-2])
+        variants.extend(base + suffix for suffix in ("", "s", "ed", "ing"))
+    if term.casefold().endswith("y") and len(term) > 1 and term[-2].casefold() not in "aeiou":
+        base = re.escape(term.casefold()[:-1])
+        variants.extend(base + suffix for suffix in ("ies", "ied"))
     if term.casefold().endswith("e"):
         stem = re.escape(term.casefold()[:-1])
         variants.extend((stem + suffix for suffix in ("s", "es", "ed", "ing", "ion", "ions")))
@@ -103,6 +110,14 @@ def _term_pattern(term: str) -> str:
 
 def _term_matches(text: str, term: str) -> bool:
     return bool(re.search(_term_pattern(term), text.casefold()))
+
+
+def _term_or_equivalent_matches(text: str, term: str, equivalents: dict[str, Any]) -> bool:
+    declared = equivalents.get(term, [])
+    alternatives = [term]
+    if isinstance(declared, list):
+        alternatives.extend(item for item in declared if isinstance(item, str) and item.strip())
+    return any(_term_matches(text, alternative) for alternative in alternatives)
 
 
 def _number_with_unit_matches(
@@ -407,6 +422,10 @@ def _defect_consistency(
         return "blocked", ["defect consistency requires fixture and candidate item lists"]
     if not isinstance(severity, dict):
         return "blocked", ["defect consistency requires a severity object"]
+    summary_equivalents = rule.get("summary_equivalent_terms", {})
+    remediation_equivalents = rule.get("remediation_equivalent_terms", {})
+    if not isinstance(summary_equivalents, dict) or not isinstance(remediation_equivalents, dict):
+        return "blocked", ["defect consistency equivalent terms must be objects"]
 
     finding_id_key = rule.get("finding_id_key", "id")
     finding_summary_key = rule.get("finding_summary_key", "summary")
@@ -519,8 +538,8 @@ def _defect_consistency(
         remediation_item = remediation_by_id.get(identifier)
         summary = _flatten_text(finding.get(finding_summary_key) if isinstance(finding, dict) else "")
         action = _flatten_text(remediation_item.get(remediation_action_key) if isinstance(remediation_item, dict) else "")
-        missing_summary = [term for term in summary_terms if not _term_matches(summary, term)]
-        missing_action = [term for term in remediation_terms if not _term_matches(action, term)]
+        missing_summary = [term for term in summary_terms if not _term_or_equivalent_matches(summary, term, summary_equivalents)]
+        missing_action = [term for term in remediation_terms if not _term_or_equivalent_matches(action, term, remediation_equivalents)]
         if missing_summary:
             errors.append(
                 f"finding for {location!r} does not identify supplied risk terms: {', '.join(missing_summary)}"
@@ -634,11 +653,7 @@ def _text_contains(fixture: dict[str, Any], candidate: Any, rule: dict[str, Any]
     for term in terms:
         if not isinstance(term, str):
             continue
-        alternatives = [term]
-        declared = equivalent_terms.get(term) if isinstance(equivalent_terms, dict) else None
-        if isinstance(declared, list):
-            alternatives.extend(item for item in declared if isinstance(item, str))
-        if not any(_term_matches(lowered, alternative) for alternative in alternatives):
+        if not _term_or_equivalent_matches(lowered, term, equivalent_terms or {}):
             missing.append(term)
     errors = [f"missing required text: {', '.join(missing)}"] if missing else []
     fixture_requirements = rule.get("fixture_requirements", [])
@@ -822,13 +837,18 @@ def _progression_limit(candidate: Any, rule: dict[str, Any]) -> tuple[str, list[
     base = rule.get("base")
     if not isinstance(values, list) or not isinstance(key, str) or not isinstance(maximum, (int, float)) or not isinstance(base, (int, float)):
         return "blocked", ["progression rule has invalid parameters"]
-    previous = base
+    previous = Decimal(str(base))
+    maximum_decimal = Decimal(str(maximum))
     for index, item in enumerate(values):
         value = item.get(key) if isinstance(item, dict) else None
         if not isinstance(value, (int, float)) or isinstance(value, bool):
             return "blocked", [f"{rule.get('path')}[{index}] lacks a numeric {key}"]
-        increase = (value - previous) / previous if previous else 0
-        if increase > maximum:
+        value = Decimal(str(value))
+        cap = previous * (1 + maximum_decimal)
+        rounded_cap = cap.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+        increase = (value - previous) / previous if previous else Decimal(0)
+        # Rounding may admit a tenth-km plan, never reject an exact safe step.
+        if previous and value > max(cap, rounded_cap):
             return "fail", [f"{rule.get('path')}[{index}] increases by {increase:.4f}, above {maximum}"]
         previous = value
     return "pass", [f"all progression steps stay within {maximum:.0%} of the prior volume"]
