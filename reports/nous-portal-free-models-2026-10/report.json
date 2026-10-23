@@ -10,6 +10,10 @@
  "harness": "Hermes Agent, with tools, memory and automatic switching to another model turned off",
  "run_dates": "14–15 Oct and 21 Oct 2026",
  "reasoning": "medium",
+ "superseded_by": {
+  "slug": "nous-portal-free-models-v060-2026-10",
+  "note": "Scored with benchmark v0.5.0, which did not show models the required answer format."
+ },
  "models": {
   "meituan/longcat-2.5-preview:free": "LongCat 2.5 Preview",
   "poolside/laguna-s-2.1:free": "Laguna S 2.1",

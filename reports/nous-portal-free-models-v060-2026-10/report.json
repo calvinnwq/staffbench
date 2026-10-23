@@ -1,0 +1,35 @@
+{
+ "slug": "nous-portal-free-models-v060-2026-10",
+ "number": 2,
+ "title": "Nous Portal free models, benchmark v0.6.0",
+ "label": "Hermes Agent × Nous Portal free models · v0.6.0",
+ "kicker": "Benchmark v0.6.0 · Seven free models on Nous Portal",
+ "headline": "Can a *free* model run your personal staff?",
+ "published": "23 Oct 2026",
+ "pool": "The seven free models on Nous Portal that answered a test call on 23 Oct 2026",
+ "harness": "Hermes Agent, with tools, memory and automatic switching to another model turned off",
+ "run_dates": "23 Oct 2026",
+ "reasoning": "medium",
+ "models": {
+  "meituan/longcat-2.5-preview:free": "LongCat 2.5 Preview",
+  "poolside/laguna-s-2.1:free": "Laguna S 2.1",
+  "poolside/laguna-xs-2.1:free": "Laguna XS 2.1",
+  "reflection/beam-1.0-501b-a23b:free": "Beam 1.0 501B",
+  "ornith/ornith-1.5-122b:free": "Ornith 1.5 122B",
+  "stepfun/step-3.7-flash:free": "Step 3.7 Flash",
+  "upstage/solar-mini4:free": "Solar Mini4"
+ },
+ "catches": {
+  "Step 3.7 Flash": "strict usage limits",
+  "Laguna S 2.1": "free until 31 Oct 2026",
+  "Laguna XS 2.1": "free until 31 Oct 2026"
+ },
+ "notes": [
+  ["Benchmark v0.6.0", "shows every model the required answer format alongside the task. Report 01 used v0.5.0 without that format, so its scores are not directly comparable."],
+  ["The saved answers from 23 Oct 2026", "were scored again after correcting weekly-distance rounding and missed word forms. No models were called again, and the original inputs, answers and timing measurements were kept unchanged."],
+  ["The test setup", "is the same as Report 01, including medium reasoning, with tools, memory and automatic switching to another model turned off."],
+  ["MissingNo and Step 5 Preview", "were no longer free on 23 Oct 2026 and are not in this report."],
+  ["Laguna S 2.1 and Laguna XS 2.1", "are free until 31 Oct 2026."],
+  ["Step 3.7 Flash", "has strict usage limits."]
+ ]
+}

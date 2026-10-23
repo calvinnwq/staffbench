@@ -150,6 +150,18 @@ def load_reports(reports_dir: Path) -> list[dict]:
     numbers = [r["number"] for r in reports]
     if len(set(numbers)) != len(numbers):
         raise BuildError(f"report numbers must be unique: {sorted(numbers)}")
+    by_slug = {r["slug"]: r for r in reports}
+    for report in reports:
+        if "superseded_by" not in report:
+            continue
+        update = report["superseded_by"]
+        if not isinstance(update, dict) or not isinstance(update.get("slug"), str):
+            raise BuildError("report superseded_by must name a newer report and give a note")
+        target = by_slug.get(update["slug"])
+        if target is None or target["number"] <= report["number"]:
+            raise BuildError("report superseded_by must name an existing newer report")
+        if not isinstance(update.get("note"), str) or not update["note"].strip():
+            raise BuildError("report superseded_by must give a non-empty note")
     return sorted(reports, key=lambda r: r["number"])
 
 
@@ -241,7 +253,7 @@ class Site:
     def home(self) -> str:
         nr, nt = len(self.roles), len(self.tasks)
         hats = "".join(f'<li><a href="roles/#{E(r["id"])}"><code>{E(r["code"])}</code>{E(r["name"])}</a></li>' for r in self.roles)
-        cards = [self.report_card(r) for r in self.reports]
+        cards = [self.report_card(r) for r in reversed(self.reports)]
         upcoming = (self.reports[-1]["number"] + 1) if self.reports else 1
         cards.append(f'''
       <li class="rep rep-next">
@@ -269,7 +281,7 @@ class Site:
 <main id="main" class="wrap">
   <section id="reports" class="sec">
     <div class="sec-h"><span class="no">01</span><div><h2>Reports</h2>
-      <p>A report is one comparison: one pool of models, one test setup, one set of run dates. The tasks stay fixed, so you can line reports up against each other.</p></div></div>
+      <p>A report is one comparison: one pool of models, one test setup, one set of run dates. Compare models within a report; results from different benchmark versions are not directly comparable.</p></div></div>
     <ol class="reps">{"".join(cards)}</ol>
   </section>
   <section id="how" class="sec">
@@ -475,6 +487,12 @@ class Site:
             ledger = ""
             main = self.pending_sections(r, root)
             description = f"{BRAND} report {number}: {plain(r['label'])}. Results pending."
+        update_note = ""
+        if r.get("superseded_by"):
+            update = r["superseded_by"]
+            target = next(report for report in self.reports if report["slug"] == update["slug"])
+            update_note = (f'<aside class="pending-note" role="note"><p>{E(update["note"])} '
+                           f'<a href="../{E(target["slug"])}/">See Report {target["number"]:02d} for updated results.</a></p></aside>')
         body = f'''<header class="mast">
   <div class="wrap">
     <div class="strip">
@@ -486,6 +504,7 @@ class Site:
       <span class="rb-name">{E(r["label"])}</span>
       <span class="rb-date">{date}</span>
     </div>
+    {update_note}
     <div class="headline">
       <p class="kicker">{kicker}</p>
       <h1>{headline}</h1>
