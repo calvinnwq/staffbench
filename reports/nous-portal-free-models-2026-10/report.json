@@ -28,9 +28,7 @@
  "catches": {
   "Step 5 Preview": "preview",
   "Step 3.7 Flash": "strict usage limits",
-  "MissingNo": "maker not named",
-  "Laguna S 2.1": "free until 31 Oct 2026",
-  "Laguna XS 2.1": "free until 31 Oct 2026"
+  "MissingNo": "maker not named"
  },
  "not_free_as_of": {
   "MissingNo": "21 Oct 2026",
