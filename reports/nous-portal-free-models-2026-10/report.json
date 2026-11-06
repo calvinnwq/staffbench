@@ -28,13 +28,15 @@
  "catches": {
   "Step 5 Preview": "preview",
   "Step 3.7 Flash": "strict usage limits",
-  "MissingNo": "maker not named",
-  "Laguna S 2.1": "free until 31 Oct 2026",
-  "Laguna XS 2.1": "free until 31 Oct 2026"
+  "MissingNo": "maker not named"
  },
  "not_free_as_of": {
   "MissingNo": "21 Oct 2026",
-  "Step 5 Preview": "21 Oct 2026"
+  "Step 5 Preview": "21 Oct 2026",
+  "LongCat 2.5 Preview": "5 Nov 2026",
+  "Ornith 1.5 122B": "5 Nov 2026",
+  "Laguna S 2.1": "5 Nov 2026",
+  "Laguna XS 2.1": "5 Nov 2026"
  },
  "notes": [
   ["MissingNo", "has no named maker. It may change or disappear without notice."],
