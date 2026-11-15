@@ -29,7 +29,9 @@
   "LongCat 2.5 Preview": "5 Nov 2026",
   "Ornith 1.5 122B": "5 Nov 2026",
   "Laguna S 2.1": "5 Nov 2026",
-  "Laguna XS 2.1": "5 Nov 2026"
+  "Laguna XS 2.1": "5 Nov 2026",
+  "Beam 1.0 501B": "10 Nov 2026",
+  "Crouton Alpha": "10 Nov 2026"
  },
  "notes": [
   ["Benchmark v0.6.0", "shows every model the required answer format alongside the task. Report 01 used v0.5.0 without that format, so its scores are not directly comparable."],
