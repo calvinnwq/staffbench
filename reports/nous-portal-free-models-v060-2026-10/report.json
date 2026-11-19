@@ -3,12 +3,12 @@
  "number": 2,
  "title": "Nous Portal free models, benchmark v0.6.0",
  "label": "Hermes Agent × Nous Portal free models · v0.6.0",
- "kicker": "Benchmark v0.6.0 · Nine free models on Nous Portal",
+ "kicker": "Benchmark v0.6.0 · Eleven free models on Nous Portal",
  "headline": "Can a *free* model run your personal staff?",
  "published": "23 Oct 2026",
- "pool": "The seven free models on Nous Portal that answered a test call on 23 Oct 2026, plus Crouton Alpha and LongCat 2.5, which joined the free list later and answered a test call on 5 Nov 2026",
+ "pool": "The seven free models on Nous Portal that answered a test call on 23 Oct 2026, plus four that joined the free list later: Crouton Alpha and LongCat 2.5, which answered a test call on 5 Nov 2026, and Qwen 4-Max and HY4 Flash, which answered one on 19 Nov 2026",
  "harness": "Hermes Agent, with tools, memory and automatic switching to another model turned off",
- "run_dates": "23 Oct and 5 Nov 2026",
+ "run_dates": "23 Oct, 5 Nov and 19 Nov 2026",
  "reasoning": "medium",
  "models": {
   "meituan/longcat-2.5-preview:free": "LongCat 2.5 Preview",
@@ -19,11 +19,14 @@
   "stepfun/step-3.7-flash:free": "Step 3.7 Flash",
   "upstage/solar-mini4:free": "Solar Mini4",
   "stealth/crouton-alpha": "Crouton Alpha",
-  "meituan/longcat-2.5:free": "LongCat 2.5"
+  "meituan/longcat-2.5:free": "LongCat 2.5",
+  "qwen/qwen4-max:free": "Qwen 4-Max",
+  "tencent/hy4-flash:free": "HY4 Flash"
  },
  "catches": {
   "Step 3.7 Flash": "strict usage limits",
-  "Crouton Alpha": "maker not named"
+  "Crouton Alpha": "maker not named",
+  "Qwen 4-Max": "free for a limited time"
  },
  "not_free_as_of": {
   "LongCat 2.5 Preview": "5 Nov 2026",
@@ -42,6 +45,8 @@
   ["Step 3.7 Flash", "has strict usage limits."],
   ["Crouton Alpha and LongCat 2.5", "joined the free list after the 23 Oct run, so they ran on 5 Nov 2026 with the same tasks, settings and test setup."],
   ["LongCat 2.5", "is listed separately from LongCat 2.5 Preview, and the two are scored separately."],
-  ["Crouton Alpha", "has no named maker. It may change or disappear without notice."]
+  ["Crouton Alpha", "has no named maker. It may change or disappear without notice."],
+  ["Qwen 4-Max and HY4 Flash", "joined the free list after the 5 Nov run, so they ran on 19 Nov 2026 with the same tasks, settings and test setup."],
+  ["Qwen 4-Max", "is free on Nous Portal for a limited time. It does not offer a medium reasoning setting; Nous Portal accepted the medium request, and a check showed it reasoning more than at its low setting and less than at high."]
  ]
 }
